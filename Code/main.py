@@ -2,28 +2,22 @@ import simple_tests
 import matplotlib.pyplot as plt
 from error_model import ErrorModel
 from stats import plot_error
+from scalar_product import ScalarProduct
 import pacal
 import time
-
-#main:
-start = time.time()
-test_scalar_products()
-#dist = pacal.UniformDistr(0 ,1 )
-#test_error_model(U)
-#test_plot_error(dist)
-#test_operations()
-end = time.time()
-print('Elapsed time:'+repr(end - start)+'s')
 
 
 def test_scalar_products():
     X=[]
     Y=[]
-    for i in range(1,3):
+    for i in range(1,4):
         X.append(pacal.UniformDistr(-1,1))
         Y.append(pacal.NormalDistr())
-    error_free_scalar_product(X,Y)
-
+    SP=ScalarProduct(X,Y)
+    SP.get_pushforward()
+    #SP.plot_pushforward('pics/pushfwd')
+    SP.get_errorPushforward(10,-15,16,32)
+    SP.plot_all('pics/pushfwd')
 
 def test_error_model(distribution):
     error=ErrorModel(distribution,10,-15,16,32)
@@ -67,6 +61,15 @@ def test_operations():
 
 
 
+#main:
+start = time.time()
+test_scalar_products()
+#dist = pacal.UniformDistr(0 ,1 )
+#test_error_model(U)
+#test_plot_error(dist)
+#test_operations()
+end = time.time()
+print('Elapsed time:'+repr(end - start)+'s')
 
 
 

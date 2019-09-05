@@ -5,6 +5,7 @@
 \usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage{cleveref}
+\usepackage{relsize}
 
 \newcommand{\ie}{i.e.\ }
 \newcommand{\eg}{e.g.\ }
@@ -16,6 +17,15 @@
 \newcommand{\round}{\mathrm{Round}}
 \newcommand{\pfp}{+_{\mathrm{fp}}}
 \newcommand{\absv}[1]{\vert #1\vert}
+\newcommand{\Pro}{\mathbb{P}}
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\ceil}[1]{\lceil #1 \rceil}
+\newcommand{\floor}[1]{\lfloor #1 \rfloor}
+\newcommand{\intvl}[1]{\mathlarger{\left[\right.}  #1 \mathlarger{\left.\right]}}
+\newcommand{\inv}{^{-1}}
+\newcommand{\fintvl}[1][x]{\mathlarger{\lfloor}#1,#1\mathlarger{\rceil}}
+
 
 \title{A probabilistic approach to the accuracy and stability of numerical algorithms}
 \author{George Constantinides and Fredrik Dahlqvist \\ Department of Electrical and Electronic Engineering\\ Imperial College London}
@@ -48,6 +58,14 @@
 \label{fig:trapeze}
 \end{figure}
 \end{itemize}
+
+
+\subsubsection{Derivation of the rounding error distribution}
+Suppose a continuous (real-valued) random variable $X$ is distributed according to a probability density function $f$ (for example $X$ could model a stochastic, analog input signal), we can explicitly compute the distribution of the relative error induced by the quantization procedure (for example when the analog signal is digitized). We will `normalize' the result by working in units of $u$, the unit roundoff. Since the relative rounding error lies in the interval $[-u,u]$, the normalized relative error will lie in the interval $[-1,1]$.  We start by looking at the cumulative distribution function, \ie we compute the function:
+\begin{align*}
+c(t):=\Pro\left(\frac{X-\round(X)}{X}\leq tu\right)
+\end{align*}
+where $u$ is the unit roundoff. Clearly $\round(X)$ can take any value in $\F$, and given $x\in\F$ it is only possible to have $\round(X)=x$ if $X\in \left[\floor{x},\ceil{x}\right[$. This partitions $\R$
 
 \subsection{Probabilistic version of the IEEE 754 standard}\label{subsec:prob_ieee754}
 
