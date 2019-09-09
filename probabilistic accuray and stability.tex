@@ -34,6 +34,7 @@
 %% EDITING etc
 \newcommand{\ie}{i.e.\ }
 \newcommand{\eg}{e.g.\ }
+\newcommand{\wrt}{w.r.t.\ }
 
 %% OBJECTS
 \newcommand{\F}[1][n,p]{\mathbb{F}_{#1}}
@@ -74,6 +75,7 @@
 \newcommand{\NaN}{\mathtt{NaN}}
 \newcommand{\minfty}{\mathtt{infty}}
 \newcommand{\supp}{\mathrm{supp}}
+\newcommand{\dt}{\frac{\partial}{\partial t}}
 
 \author{Fredrik Dahlqvist}
 \title{Probabilistic accuracy and stability}
@@ -123,69 +125,110 @@ We define the (relative) rounding error as the quantity
 \[
 \frac{\absv{x-\Rep(\Round(x))}}{x}
 \]
-Suppose $x$ is sampled randomly from a probability distribution $\mu$ on $\R$ and then rounded by a map $\Round:\R\to\F$, \emph{what is the distribution of the (relative) error}?
-
-Note first that if $x\in (-\infty,D)$ then $\Round(x)=-\mathtt{infty}$, and the relative error introduced by rounding is then ill-defined/infinite:
+Suppose $x$ is sampled randomly from a probability distribution $\mu$ on $\R$ and then rounded by a map $\Round:\R\to\F$, \emph{what is the distribution of the (relative) error}? For now we will only consider the case where $\mu$ is absolutely continuous \wrt the Lebesgue measure, that is to say the case where $\mu$ has a probability density function $f$:
 \[
-\frac{\absv{\Rep(\Round(x)))-x}}{x}=\frac{\absv{\infty-x}}{x}=\infty
+\mu(A):=\Pro{x\in A}=\int_Af(x)~dx
 \]
-and similarly, if $x\in (U,\infty)$. We will therefore assume throughout that $\mu$ is supported by $[D,U]$. Morally, this is justified: any program receiving a probabilistic input $x$ should be able (at least most of the time) to read and quantize such an input without overflowing. 
+For notational clarity we will write $\hat{x}:=\Rep(\Round(x))$. We choose to express the relative error in multiples of the unit roundoff $u$. This choice is arbitrary, but it allows us to normalize the distribution since the absolute value of the relative error is strictly bounded by $u$. In other words, we express the relative error as a distribution on $[-1,1]$ rather than $[-u,u]$. In order to compute the density function of this distribution we proceed in the standard way by first computing the cumulative distribution function and then taking its derivative, \ie we start by computing
+\begin{align}\label{eq:cdf1}
+c(t):=\Pro{\frac{x-\hat{x}}{x}\leq tu}
+\end{align}
+The density function will then be given by $d(t):=\dt c(t)$. Note that $\hat{x}$ must take its values in the finite set $\F$, and moreover, for a given floating point number $z$ we have $\hat{x}=z$ iff $x\in \fintvl[\hat{x}]=\fintvl[z]$. We can therefore re-write \eqref{eq:cdf1} as
+\begin{align}\label{eq:cdf2}
+c(t)=\Pro{\bigvee_{z\in\F}\left(\frac{x-z}{x}\leq tu\wedge x\in \fintvl[z]\right)}
+\end{align}
+We need to consider some special cases:
+\begin{enumerate}
+\item If $\hat{x}=0$ then $\frac{x-\hat{x}}{x}=1$ and thus (since $tu<1$):
+\begin{align}\label{eq:cdfnot0}
+\Pro{\frac{x-0}{x}\leq tu\wedge x\in \fintvl[0]}=0
+\end{align}
+\item If $\hat{x}=-\infty$ then $\frac{x-\hat{x}}{x}=\infty$ and thus 
+\begin{align}\label{eq:cdfnotminf}
+\Pro{\frac{x+\infty}{x}\leq tu\wedge x\in \left]-\infty,D\right]}=0
+\end{align}
+\item Finally, if $\hat{x}=\infty$ then $\frac{x-\hat{x}}{x}=-\infty$ and thus 
+\begin{align}\label{eq:cdfpinf}
+\Pro{\frac{x-\infty}{x}\leq tu\wedge x\in [U,\infty[}=\Pro{x\in [U,\infty[~}
+\end{align}
+\end{enumerate}
 
-Suppose thus that $\supp(\mu)\subseteq [D,U]$, can we compute the distribution of the rounding error? We assume that $\mu$ has a density $f$ w.r.t. the Lebesgue measure $\lambda$ on $\R$ (in particular $\mu(\infty)=\mu(-\infty)=0$).
-
-First we partition $\eR$ as the disjoint union
-\[
-\eR=\bigcup_{n\in \F}\Round\inv(n).
-\]
-On each element $x\in\Round\inv(n)$ of the partition we can compute the c.d.f. of the rounding error 
-\begin{align*}
-\mu\left(\left\{x\mid  x\in\Round\inv(n), \frac{\absv{x-\hat{x}}}{x}\leq t\right\}\right).
+It follows from \eqref{eq:cdfnot0}-\eqref{eq:cdfpinf} and the additivity of measures that \eqref{eq:cdf2} becomes
+\begin{align*}\label{eq:cdf3}
+c(t)=&\sum_{z\in\F\setminus\{-\infty,0,\infty\}}\Pro{\frac{x-z}{x}\leq tu\wedge x\in \fintvl[z]}+\Pro{x\in [U,\infty[~}\\
+=&\sum_{z\in\F\setminus\{-\infty,0,\infty\}}\Pro{~\frac{z}{x}\leq 1-tu\wedge x\in \fintvl[z]}+\Pro{x\in [U,\infty[~}\\
+=&\sum_{z\in\F^-\setminus\{-\infty,0\}}\Pro{\frac{z}{1-tu}\geq x\wedge x\in \fintvl[z]}+\sum_{z\in\F^+\setminus\{0,\infty\}}\Pro{\frac{z}{1-tu}\leq x \wedge x\in \fintvl[z]}+\Pro{x\in [U,\infty[~}\\
+=&\sum_{z\in\F^-\setminus\{-\infty,0\}}\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) \int^{\frac{z}{1-tu}}_{\floor{z}} f(s)~ds+ \sum_{z\in\F^-\setminus\{-\infty,0\}}\one_{[\ceil{z},\infty[}\left(\frac{z}{1-tu}\right) \int^{\ceil{z}}_{\floor{z}} f(s)~ds~+ \\
+&\sum_{z\in\F^+\setminus\{0,\infty\}}\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) \int^{\ceil{z}}_{\frac{z}{1-tu}} f(s)~ds+\sum_{z\in\F^+\setminus\{0,\infty\}}\one_{]-\infty,\floor{z}}\left(\frac{z}{1-tu}\right) \int_{\floor{z}}^{\ceil{z}} f(s)~ds~+
+\\
+&\int_U^\infty f(s)~ds
 \end{align*}
-where $t$ is of course bounded by $0\leq t\leq \uro$.
-Supposing first that $\hat{x}\geq 0$ and distinguishing the cases where $x<\hat{x}$ and $\hat{x}\leq x$ we get
-\begin{align*}
-&\mu\left(\left\{x\mid  x\in\Round\inv(n), \frac{\absv{x-\hat{x}}}{x}\leq t\right\}\right)\\
-=&\mu\left(\left\{x\mid x\in\Round\inv(n), x<\hat{x}, \frac{\hat{x}-x}{x}\leq t\right\}\right)+\mu\left(\left\{x\mid x\in\Round\inv(n), \hat{x}<x, \frac{x-\hat{x}}{x}\leq t\right\}\right)\\
-=&\mu\left(\left\{x\mid x\in\Round\inv(n), x<\hat{x}, \frac{\hat{x}}{x}-1\leq t\right\}\right)+\mu\left(\left\{x\mid x\in\Round\inv(n), \hat{x}<x, 1-\frac{\hat{x}}{x}\leq t\right\}\right)\\
-=&\mu\left(\left\{x\mid x\in\Round\inv(n), x<\hat{x}, \frac{\hat{x}}{1+t}\leq x\right\}\right)+\mu\left(\left\{x\mid x\in\Round\inv(n), \hat{x}<x, \frac{\hat{x}}{1-t}\geq x\right\}\right)\\
-=&\int_{\frac{\hat{x}}{1+t}}^{\hat{x}} f(u)~du+\int_{\hat{x}}^{\frac{\hat{x}}{1-t}}f(u)~du\qquad\qquad\text{where }\hat{x}=\Rep(n)\\
-=&\int_{\frac{\hat{x}}{1+t}}^{\frac{\hat{x}}{1-t}}f(u)~du
-\end{align*}
-Similarly, we get if $\hat{x}<0$ that
-\[
-\mu\left(\left\{x\mid x\in\Round\inv(n), \frac{\absv{x-\hat{x}}}{x}\leq t\right\}\right)=\int^{\frac{\hat{x}}{1+t}}_{\frac{\hat{x}}{1-t}}f(u)~du\qquad\qquad\text{where }\hat{x}=\Rep(n)\\
-\]
-We can now add up the contributions on each element of the partition to get
-\begin{align*}
-\mu\left(\left\{x\mid  \frac{\absv{x-\hat{x}}}{x}\leq t\right\}\right)=\sum_{n\in\F, \Rep(n)<0} \int^{\frac{\Rep(n)}{1+t}}_{\frac{\Rep(n)}{1-t}}f(u)~du +\sum_{n\in\F, \Rep(n)> 0} \int^{\frac{\Rep(n)}{1-t}}_{\frac{\Rep(n)}{1+t}}f(u)~du 
-\end{align*}
-Provided that $f$ is well-behaved (in a way which we shall make precise in an instant), we can provide a good approximation of each summand. For this we use the \emph{midpoint rule}:
-\begin{theorem}[Midpoint rule]
-Let $f\in C^2\left[a,b\right]$, then
-\begin{equation}
-\int_a^b f(u)~du =(b-a)f((a+b)/2)+ \varepsilon(a,b,f)\qquad\text{ where }\qquad \varepsilon(a,b,f)\leq\frac{\absv{b-a}^3}{24}\norm{f''}_{\infty} 
-\end{equation}
-\end{theorem}
-Assuming that terms of order $\uro^2$ (and thus $t^2\leq \uro^2)$ can be ignored we get from the midpoint rule that
-\begin{align*}
-\mu\left(\left\{x\mid  \frac{\absv{x-\hat{x}}}{x}\leq t\right\}\right)&=\sum_{n\in \F} \frac{2\Rep(n) t}{1+t^2}f\left(\frac{\Rep(n)}{1+t^2}\right)+\varepsilon\left(\frac{\Rep(n)}{1+t},\frac{\Rep(n)}{1-t},f\right)\\
-&\approx \sum_{n\in \F} 2\Rep(n) tf\left(\Rep(n)\right)+\varepsilon\left(\frac{\Rep(n)}{1+t},\frac{\Rep(n)}{1-t},f\right)\\
-&= \sum_{n\in \F}2\Rep(n) \uro f(\Rep(n)) \frac{t}{\uro}+\varepsilon\left(\frac{\Rep(n)}{1+t},\frac{\Rep(n)}{1-t},f\right)\\
-&\approx \sum_{n\in \F} \frac{2\Rep(n) \uro}{1+u^2}f\left(\frac{\Rep(n)}{1+u^2}\right)\frac{t}{\uro}+\varepsilon\left(\frac{\Rep(n)}{1+t},\frac{\Rep(n)}{1-t},f\right)\\
-&=\frac{t}{\uro}\left(\int_{-\infty}^{\infty} f(u)~du -\sum_{\in\F}\varepsilon\left(\frac{\Rep(n)}{1+u},\frac{\Rep(n)}{1-u},f\right)\right)+\sum_{\in\F}\varepsilon\left(\frac{\Rep(n)}{1+t},\frac{\Rep(n)}{1-t},f\right)\\
-&=\frac{t}{\uro}\left(1-\sum_{\in\F}\varepsilon\left(\frac{\Rep(n)}{1+u},\frac{\Rep(n)}{1-u},f\right)\right)+\sum_{\in\F}\varepsilon\left(\frac{\Rep(n)}{1+t},\frac{\Rep(n)}{1-t},f\right)\\
-&=\frac{t}{\uro}+\frac{t}{\uro}\sum_{\in\F}\frac{\Rep(n)^3(u^3-t^3)}{3(1+t^2)^3(1+u^2)^3}\norm{f''}_{\infty,n}
-\end{align*}
-For the second term in the last line to be small it is necessary that $\norm{f''}_\infty$ decays fast enough. If we want this term to be smaller that $\uro^2$ we need $\norm{f''}_{\infty,n}<\frac{3}{\Rep(n)^3\uro}$. 
+where $\F^-$ (resp. $\F^+$) are the negative (resp. positive) floating point numbers and $\one_{[a,b]}(x)$ is the usual indicator function which return 1 if $a\leq x\leq b$ and 0 otherwise.
 
-Conclusion: if $f''(x)$ can be bounded from above by something of the order of $\frac{3}{x^3\uro}$, then 
-\[
-\mu\left(\left\{x\mid  \frac{\absv{x-\hat{x}}}{x}\leq t\right\}\right)\approx \frac{t}{\uro}
-\]
-in other words the distribution of relative errors is, to a very good approximation, uniform on the interval $\left[0,\uro\right]$. If we can to include the sign of the error we would get an approximately uniform distribution on the interval $\left[-\uro,\uro\right]$ (maybe this is a slightly neater calculation). Since $f$ must be a density, it must decay very rapidly, and if the data is centred then it must decay very rapidly from 0, thus assuming $f''(x)<\frac{3}{x^3\uro}$ is not a very dramatic requirement.
+We now take the derivative of $c(t)$ to get the density function $d(t)$. Using Leibniz's rule we get:
+\begin{align*}
+d(t):=&\dt c(t)\\
+=& \sum_{z\in\F^-\setminus\{-\infty,0\}}\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) f\left(\frac{z}{1-tu}\right) \frac{-uz}{(1-tu)^2}+\sum_{z\in\F^+\setminus\{0.\infty\}}\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) f\left(\frac{z}{1-tu}\right) \frac{uz}{(1-tu)^2}\\
+=&\sum_{z\in\F\{-\infty,0,\infty\}}\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) f\left(\frac{z}{1-tu}\right) \frac{u\absv{z}}{(1-tu)^2}
+\end{align*}
 
 
-TODO: Deal with the interval $\fintvl[0]$, sort out notation for elements of $\F$ (cannot use $n$!).
+
+%First we partition $\eR$ as the disjoint union
+%\[
+%\eR=\bigcup_{n\in \F}\Round\inv(n).
+%\]
+%On each element $x\in\Round\inv(n)$ of the partition we can compute the c.d.f. of the rounding error 
+%\begin{align*}
+%\mu\left(\left\{x\mid  x\in\Round\inv(n), \frac{\absv{x-\hat{x}}}{x}\leq t\right\}\right).
+%\end{align*}
+%where $t$ is of course bounded by $0\leq t\leq \uro$.
+%Supposing first that $\hat{x}\geq 0$ and distinguishing the cases where $x<\hat{x}$ and $\hat{x}\leq x$ we get
+%\begin{align*}
+%&\mu\left(\left\{x\mid  x\in\Round\inv(n), \frac{\absv{x-\hat{x}}}{x}\leq t\right\}\right)\\
+%=&\mu\left(\left\{x\mid x\in\Round\inv(n), x<\hat{x}, \frac{\hat{x}-x}{x}\leq t\right\}\right)+\mu\left(\left\{x\mid x\in\Round\inv(n), \hat{x}<x, \frac{x-\hat{x}}{x}\leq t\right\}\right)\\
+%=&\mu\left(\left\{x\mid x\in\Round\inv(n), x<\hat{x}, \frac{\hat{x}}{x}-1\leq t\right\}\right)+\mu\left(\left\{x\mid x\in\Round\inv(n), \hat{x}<x, 1-\frac{\hat{x}}{x}\leq t\right\}\right)\\
+%=&\mu\left(\left\{x\mid x\in\Round\inv(n), x<\hat{x}, \frac{\hat{x}}{1+t}\leq x\right\}\right)+\mu\left(\left\{x\mid x\in\Round\inv(n), \hat{x}<x, \frac{\hat{x}}{1-t}\geq x\right\}\right)\\
+%=&\int_{\frac{\hat{x}}{1+t}}^{\hat{x}} f(u)~du+\int_{\hat{x}}^{\frac{\hat{x}}{1-t}}f(u)~du\qquad\qquad\text{where }\hat{x}=\Rep(n)\\
+%=&\int_{\frac{\hat{x}}{1+t}}^{\frac{\hat{x}}{1-t}}f(u)~du
+%\end{align*}
+%Similarly, we get if $\hat{x}<0$ that
+%\[
+%\mu\left(\left\{x\mid x\in\Round\inv(n), \frac{\absv{x-\hat{x}}}{x}\leq t\right\}\right)=\int^{\frac{\hat{x}}{1+t}}_{\frac{\hat{x}}{1-t}}f(u)~du\qquad\qquad\text{where }\hat{x}=\Rep(n)\\
+%\]
+%We can now add up the contributions on each element of the partition to get
+%\begin{align*}
+%\mu\left(\left\{x\mid  \frac{\absv{x-\hat{x}}}{x}\leq t\right\}\right)=\sum_{n\in\F, \Rep(n)<0} \int^{\frac{\Rep(n)}{1+t}}_{\frac{\Rep(n)}{1-t}}f(u)~du +\sum_{n\in\F, \Rep(n)> 0} \int^{\frac{\Rep(n)}{1-t}}_{\frac{\Rep(n)}{1+t}}f(u)~du 
+%\end{align*}
+
+
+%Provided that $f$ is well-behaved (in a way which we shall make precise in an instant), we can provide a good approximation of each summand. For this we use the \emph{midpoint rule}:
+%\begin{theorem}[Midpoint rule]
+%Let $f\in C^2\left[a,b\right]$, then
+%\begin{equation}
+%\int_a^b f(u)~du =(b-a)f((a+b)/2)+ \varepsilon(a,b,f)\qquad\text{ where }\qquad \varepsilon(a,b,f)\leq\frac{\absv{b-a}^3}{24}\norm{f''}_{\infty} 
+%\end{equation}
+%\end{theorem}
+%Assuming that terms of order $\uro^2$ (and thus $t^2\leq \uro^2)$ can be ignored we get from the midpoint rule that
+%\begin{align*}
+%\mu\left(\left\{x\mid  \frac{\absv{x-\hat{x}}}{x}\leq t\right\}\right)&=\sum_{n\in \F} \frac{2\Rep(n) t}{1+t^2}f\left(\frac{\Rep(n)}{1+t^2}\right)+\varepsilon\left(\frac{\Rep(n)}{1+t},\frac{\Rep(n)}{1-t},f\right)\\
+%&\approx \sum_{n\in \F} 2\Rep(n) tf\left(\Rep(n)\right)+\varepsilon\left(\frac{\Rep(n)}{1+t},\frac{\Rep(n)}{1-t},f\right)\\
+%&= \sum_{n\in \F}2\Rep(n) \uro f(\Rep(n)) \frac{t}{\uro}+\varepsilon\left(\frac{\Rep(n)}{1+t},\frac{\Rep(n)}{1-t},f\right)\\
+%&\approx \sum_{n\in \F} \frac{2\Rep(n) \uro}{1+u^2}f\left(\frac{\Rep(n)}{1+u^2}\right)\frac{t}{\uro}+\varepsilon\left(\frac{\Rep(n)}{1+t},\frac{\Rep(n)}{1-t},f\right)\\
+%&=\frac{t}{\uro}\left(\int_{-\infty}^{\infty} f(u)~du -\sum_{\in\F}\varepsilon\left(\frac{\Rep(n)}{1+u},\frac{\Rep(n)}{1-u},f\right)\right)+\sum_{\in\F}\varepsilon\left(\frac{\Rep(n)}{1+t},\frac{\Rep(n)}{1-t},f\right)\\
+%&=\frac{t}{\uro}\left(1-\sum_{\in\F}\varepsilon\left(\frac{\Rep(n)}{1+u},\frac{\Rep(n)}{1-u},f\right)\right)+\sum_{\in\F}\varepsilon\left(\frac{\Rep(n)}{1+t},\frac{\Rep(n)}{1-t},f\right)\\
+%&=\frac{t}{\uro}+\frac{t}{\uro}\sum_{\in\F}\frac{\Rep(n)^3(u^3-t^3)}{3(1+t^2)^3(1+u^2)^3}\norm{f''}_{\infty,n}
+%\end{align*}
+%For the second term in the last line to be small it is necessary that $\norm{f''}_\infty$ decays fast enough. If we want this term to be smaller that $\uro^2$ we need $\norm{f''}_{\infty,n}<\frac{3}{\Rep(n)^3\uro}$. 
+%
+%Conclusion: if $f''(x)$ can be bounded from above by something of the order of $\frac{3}{x^3\uro}$, then 
+%\[
+%\mu\left(\left\{x\mid  \frac{\absv{x-\hat{x}}}{x}\leq t\right\}\right)\approx \frac{t}{\uro}
+%\]
+%in other words the distribution of relative errors is, to a very good approximation, uniform on the interval $\left[0,\uro\right]$. If we can to include the sign of the error we would get an approximately uniform distribution on the interval $\left[-\uro,\uro\right]$ (maybe this is a slightly neater calculation). Since $f$ must be a density, it must decay very rapidly, and if the data is centred then it must decay very rapidly from 0, thus assuming $f''(x)<\frac{3}{x^3\uro}$ is not a very dramatic requirement.
+%
+%
+%TODO: Deal with the interval $\fintvl[0]$, sort out notation for elements of $\F$ (cannot use $n$!).
 \section{Modelling}
 
 
