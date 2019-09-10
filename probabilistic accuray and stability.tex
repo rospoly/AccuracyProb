@@ -83,9 +83,12 @@
 \begin{document}
 \maketitle
 
+
+
+
 \subsection*{Notation}
 As usual $\eR:=\R\cup\{-\infty,\infty\}$ denotes the \emph{extended real line}. 
-Let $\F$ denote the set of floating-point numbers with exponent size $n$ and mantissa size $p$, let $\Round:\eR\to\F$ and $\Rep: \F\to \eR$ be the corresponding rounding and representation maps respectively. We denote the positive and negative `machine infinities' of $\F$ by $\minfty$ and $-\minfty$ to distinguish them from the `usual' positive and negative infinities $\infty$ and $-\infty$. Ignoring $\NaN$, both $\F$ and $\eR$ carry a natural linear order with $\inf \F=-\minfty,\sup\F=\minfty$ and $\inf \eR=-\infty,\sup\eR=\infty$.
+Let $\F$ denote the set of floating-point numbers with exponent size $emax=n$ (so $emin=1-n)$ and mantissa size $p$, let $\Round:\eR\to\F$ and $\Rep: \F\to \eR$ be the corresponding rounding and representation maps respectively. We denote the positive and negative `machine infinities' of $\F$ by $\minfty$ and $-\minfty$ to distinguish them from the `usual' positive and negative infinities $\infty$ and $-\infty$. Ignoring $\NaN$, both $\F$ and $\eR$ carry a natural linear order with $\inf \F=-\minfty,\sup\F=\minfty$ and $\inf \eR=-\infty,\sup\eR=\infty$.
 
 
 
@@ -121,6 +124,8 @@ In other words, $\cceil{x}$ is the smallest machine representable number above $
 
 \section{Error distribution.}
 
+\subsection{Derivation of the relative error distribution.}
+
 We define the (relative) rounding error as the quantity
 \[
 \frac{\absv{x-\Rep(\Round(x))}}{x}
@@ -137,6 +142,7 @@ The density function will then be given by $d(t):=\dt c(t)$. Note that $\hat{x}$
 \begin{align}\label{eq:cdf2}
 c(t)=\Pro{\bigvee_{z\in\F}\left(\frac{x-z}{x}\leq tu\wedge x\in \fintvl[z]\right)}
 \end{align}
+
 We need to consider some special cases:
 \begin{enumerate}
 \item If $\hat{x}=0$ then $\frac{x-\hat{x}}{x}=1$ and thus (since $tu<1$):
@@ -154,24 +160,146 @@ We need to consider some special cases:
 \end{enumerate}
 
 It follows from \eqref{eq:cdfnot0}-\eqref{eq:cdfpinf} and the additivity of measures that \eqref{eq:cdf2} becomes
-\begin{align*}\label{eq:cdf3}
-c(t)=&\sum_{z\in\F\setminus\{-\infty,0,\infty\}}\Pro{\frac{x-z}{x}\leq tu\wedge x\in \fintvl[z]}+\Pro{x\in [U,\infty[~}\\
-=&\sum_{z\in\F\setminus\{-\infty,0,\infty\}}\Pro{~\frac{z}{x}\leq 1-tu\wedge x\in \fintvl[z]}+\Pro{x\in [U,\infty[~}\\
-=&\sum_{z\in\F^-\setminus\{-\infty,0\}}\Pro{\frac{z}{1-tu}\geq x\wedge x\in \fintvl[z]}+\sum_{z\in\F^+\setminus\{0,\infty\}}\Pro{\frac{z}{1-tu}\leq x \wedge x\in \fintvl[z]}+\Pro{x\in [U,\infty[~}\\
-=&\sum_{z\in\F^-\setminus\{-\infty,0\}}\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) \int^{\frac{z}{1-tu}}_{\floor{z}} f(s)~ds+ \sum_{z\in\F^-\setminus\{-\infty,0\}}\one_{[\ceil{z},\infty[}\left(\frac{z}{1-tu}\right) \int^{\ceil{z}}_{\floor{z}} f(s)~ds~+ \\
-&\sum_{z\in\F^+\setminus\{0,\infty\}}\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) \int^{\ceil{z}}_{\frac{z}{1-tu}} f(s)~ds+\sum_{z\in\F^+\setminus\{0,\infty\}}\one_{]-\infty,\floor{z}}\left(\frac{z}{1-tu}\right) \int_{\floor{z}}^{\ceil{z}} f(s)~ds~+
+\begin{align}
+c(t)=&\sum_{z\in\F\setminus\{-\infty,0,\infty\}}\Pro{\frac{x-z}{x}\leq tu\wedge x\in \fintvl[z]}+\Pro{x\in [U,\infty[~}\nonumber
 \\
-&\int_U^\infty f(s)~ds
-\end{align*}
+=&\sum_{z\in\F\setminus\{-\infty,0,\infty\}}\Pro{~\frac{z}{x}\leq 1-tu\wedge x\in \fintvl[z]}+\Pro{x\in [U,\infty[~} \nonumber
+\\
+=&\sum_{z\in\F^-\setminus\{-\infty,0\}}\Pro{\frac{z}{1-tu}\geq x\wedge x\in \fintvl[z]}+\sum_{z\in\F^+\setminus\{0,\infty\}}\Pro{\frac{z}{1-tu}\leq x \wedge x\in \fintvl[z]}+\Pro{x\in [U,\infty[~} \nonumber 
+\\
+=&\sum_{z\in\F^-\setminus\{-\infty,0\}}\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) \int^{\frac{z}{1-tu}}_{\floor{z}} f(s)~ds+ \sum_{z\in\F^-\setminus\{-\infty,0\}}\one_{[\ceil{z},\infty[}\left(\frac{z}{1-tu}\right) \int^{\ceil{z}}_{\floor{z}} f(s)~ds~+ \nonumber 
+\\
+&\sum_{z\in\F^+\setminus\{0,\infty\}}\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) \int^{\ceil{z}}_{\frac{z}{1-tu}} f(s)~ds+\sum_{z\in\F^+\setminus\{0,\infty\}}\one_{]-\infty,\floor{z}}\left(\frac{z}{1-tu}\right) \int_{\floor{z}}^{\ceil{z}} f(s)~ds~+
+\nonumber \\
+&\int_U^\infty f(s)~ds \label{eq:cdf3}
+\end{align}
 where $\F^-$ (resp. $\F^+$) are the negative (resp. positive) floating point numbers and $\one_{[a,b]}(x)$ is the usual indicator function which return 1 if $a\leq x\leq b$ and 0 otherwise.
 
-We now take the derivative of $c(t)$ to get the density function $d(t)$. Using Leibniz's rule we get:
-\begin{align*}
-d(t):=&\dt c(t)\\
-=& \sum_{z\in\F^-\setminus\{-\infty,0\}}\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) f\left(\frac{z}{1-tu}\right) \frac{-uz}{(1-tu)^2}+\sum_{z\in\F^+\setminus\{0.\infty\}}\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) f\left(\frac{z}{1-tu}\right) \frac{uz}{(1-tu)^2}\\
-=&\sum_{z\in\F\{-\infty,0,\infty\}}\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) f\left(\frac{z}{1-tu}\right) \frac{u\absv{z}}{(1-tu)^2}
-\end{align*}
 
+
+
+We now take the derivative of $c(t)$ given by \eqref{eq:cdf3} to get the density function $d(t)$. Note that the second, fourth and fifth term in the sum do not depend on $t$ and so disappear. Using Leibniz's rule we get:
+
+\begin{align}
+d(t):=&\dt c(t)\nonumber \\
+=& \sum_{z\in\F^-\setminus\{-\infty,0\}}\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) f\left(\frac{z}{1-tu}\right) \frac{-uz}{(1-tu)^2}+\sum_{z\in\F^+\setminus\{0.\infty\}}\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) f\left(\frac{z}{1-tu}\right) \frac{uz}{(1-tu)^2}\nonumber \\
+=&\sum_{z\in\F\{-\infty,0,\infty\}}\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) f\left(\frac{z}{1-tu}\right) \frac{u\absv{z}}{(1-tu)^2}
+\label{eq:pdf}
+\end{align}
+
+
+\subsection{Typical relative error distribution.}
+
+For many `typical' input distributions, the relative error distribution given by \eqref{eq:pdf}  always looks the same, as exemplified by the following diagram.
+
+\begin{figure}
+\caption{Relative error distribution for typical input distribution}
+\label{fig:errdist}
+\end{figure}
+
+In fact, we will now derive an analytic expression for a density function which gives a good approximation of the residual error distribution for a large class of input distributions. We will call this distribution the \emph{typical error distribution}.
+
+We start by examining the quantity
+\[
+\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right)
+\]
+which appears in \eqref{eq:pdf}. Given a $t\in\left[-1,1\right]$, we determine which floating point numbers $z\in\F\setminus\{-\infty,0,\infty\}$ make $\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right)=1$. We will write floating point numbers $z\in\F$ in the form
+\[
+z=2^e\left(1+\frac{k}{2^p}\right)
+\]
+where $e$ ranges from $emin=1-n$ to $emax=n$ and $k$ ranges from 0 to $2^p-1$ (and represents the mantissa). We can explicitly compute $\floor{z}$ and $\ceil{z}$.
+\begin{align}
+\floor{z}=
+\begin{cases}
+z & \text{if }e=emin, k=0\\
+2^{e}\left(1-\frac{1}{2^{p+2}}\right) & \text{if }e>emin, k=0\\
+2^e\left(1+\frac{2k-1}{2^{p+1}}\right) & \text{else}
+\end{cases}
+\end{align}
+and
+\begin{align}
+\ceil{z}=\begin{cases}
+z&\text{if }e=n, k=2^p-1\\
+2^e\left(1+\frac{2k+1}{2^{p+1}}\right) & \text{else}
+\end{cases}
+\end{align}
+Since $u=2^{-(p+1)}$, the condition $\floor{z}\leq \frac{z}{1-tu}\leq \ceil{z}$ thus becomes:
+\begin{enumerate}
+\item If $e=emin, k=0$:
+\begin{align*}
+2^e\left(1-\frac{t}{2^{p+1}}\right)\leq 2^e\leq 2^e\left(1+\frac{1}{2^{p+1}}\right)\left(1-\frac{t}{2^{p+1}}\right)
+\end{align*}
+from which we get
+\begin{align}
+0\leq t\leq\frac{2^{p+1}}{2^{p+1}+1}\label{eq:trange1}
+\end{align}
+\item If $e>emin, k=0$:
+\[
+2^e\left(1-\frac{1}{2^{p+2}}\right)\left(1-\frac{t}{2^{p+1}}\right)\leq 2^e\leq 2^e\left(1+\frac{1}{2^{p+1}}\right)\left(1-\frac{t}{2^{p+1}}\right)
+\]
+from which we get:
+\begin{align}
+-\frac{2^{p+1}}{2^{p+2}-1}\leq t\leq \frac{2^{p+1}}{2^{p+1}+1}\label{eq:trange2}
+\end{align}
+\item If $e=n, k=2^p+1$:
+\[
+2^e\left(1+\frac{2(2^p-1)-1}{2^{p+1}}\right)\left(1-\frac{t}{2^{p+1}}\right)\leq 2^e\left(1+\frac{2^p-1}{2^p}\right) \leq 2^e\left(1+\frac{2^p-1}{2^p}\right)\left(1-\frac{t}{2^{p+1}}\right)
+\]
+from which we get
+\begin{align}
+-\frac{2^{p+1}}{2^{p+2}-3}\leq t\leq 0\label{eq:trange3}
+\end{align}
+
+\item Else: 
+\begin{align*}
+2^e\left(1+\frac{2k-1}{2^p}\right)\left(1-\frac{t}{2^p}\right)\leq 2^e\left(1+\frac{k}{2^p}\right)\leq 2^e\left(1+\frac{2k+1}{2^p}\right)\left(1-\frac{t}{2^p}\right)
+\end{align*}
+from which we get:
+\begin{align}
+-\frac{2^{p+1}}{2^{p+1}+2k-1}\leq t\leq \frac{2^{p+1}}{2^{p+1}+2k+1}\label{eq:trange4}
+\end{align}
+\end{enumerate}
+
+
+Note that the upper bound of \eqref{eq:trange1}, \eqref{eq:trange2} and \eqref{eq:trange4} are compatible.
+The bounds $t_{min}$ and $t_{max}$ of \eqref{eq:trange4} are reached when the relations
+\begin{align*}
+&\frac{1}{1-t_{max}u}=\frac{\ceil{z}}{z} & \frac{1}{1-t_{min}u}=\frac{\floor{z}}{z} & &\text{when } z\geq 0\\
+&\frac{1}{1-t_{min}u}=\frac{\ceil{z}}{z} & \frac{1}{1-t_{max}u}=\frac{\floor{z}}{z} & &\text{when } z\leq 0
+\end{align*}
+It follows that 
+\begin{align*}
+\frac{\ceil{z}-\floor{z}}{\absv{z}u}&=\frac{1}{u}\left(\frac{1}{1-t_{max}}-\frac{1}{1-t_{min}}\right)\\
+&=\frac{2^{p+1}}{2^p+k}
+\end{align*}
+and thus
+\[
+\absv{z}u=(\ceil{z}-\floor{z})\frac{2^p+k}{2^{p+1}}
+\]
+
+We can use Eqs. \eqref{eq:trange1}-\eqref{eq:trange4} to express the possible values of $e,k$ for a given $t$. Using \eqref{eq:trange4}, we get when $t\geq 0$
+\begin{align}
+2^p\left(-\frac{1}{t}-1\right)+\frac{1}{2}\leq k\leq 2^p\left(\frac{1}{t}-1\right)-\frac{1}{2}
+\end{align}
+and when $t\leq 0$:
+\begin{align}
+2^p\left(\frac{1}{t}-1\right)-\frac{1}{2}\leq k\leq 2^p\left(-\frac{1}{t}-1\right)+\frac{1}{2}
+\end{align}
+
+We have now enough details to describe the typical distribution. We have:
+\begin{align*}
+1&=\int_{-\infty}^\infty f(s)~ds\\
+&\approx \sum_{z\in\F\setminus\{-\infty,0,\infty\}} f(z)(\ceil{z}-\floor{z})
+\end{align*}
+\textbf{Assumption:} the quadrature $\sum_{z\in\F\setminus\{-\infty,0,\infty\}} f(z)(\ceil{z}-\floor{z})$ gives a good approximation of $\int f(s)~ds$.
+
+Note now that by using \eqref{eq:trange4} we get 
+\begin{align*}
+\frac{\ceil{z}-\floor{z}}{\absv{z}u}&=\frac{\ceil{z}}{\absv{z}u}+\frac{\floor{z}}{\absv{z}u}\\
+&=\frac{2^{p+1}}{2^{p+1}+2k-1}+ \frac{2^{p+1}}{2^{p+1}+2k+1}\\
+&=\frac{2^{p+1}}{2^p+k}
+\end{align*}
+where the absolute value $\absv{z}$ ensures that the result is always positive. This allows us to 
 
 
 %First we partition $\eR$ as the disjoint union
