@@ -183,7 +183,7 @@ We now take the derivative of $c(t)$ given by \eqref{eq:cdf3} to get the density
 \begin{align}
 d(t):=&\dt c(t)\nonumber \\
 =& \sum_{z\in\F^-\setminus\{-\infty,0\}}\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) f\left(\frac{z}{1-tu}\right) \frac{-uz}{(1-tu)^2}+\sum_{z\in\F^+\setminus\{0.\infty\}}\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) f\left(\frac{z}{1-tu}\right) \frac{uz}{(1-tu)^2}\nonumber \\
-=&\sum_{z\in\F\{-\infty,0,\infty\}}\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) f\left(\frac{z}{1-tu}\right) \frac{u\absv{z}}{(1-tu)^2}
+=&\sum_{z\in\F\setminus\{-\infty,0,\infty\}}\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) f\left(\frac{z}{1-tu}\right) \frac{u\absv{z}}{(1-tu)^2}
 \label{eq:pdf}
 \end{align}
 
@@ -197,7 +197,7 @@ For many `typical' input distributions, the relative error distribution given by
 \label{fig:errdist}
 \end{figure}
 
-In fact, we will now derive an analytic expression for a density function which gives a good approximation of the residual error distribution for a large class of input distributions. We will call this distribution the \emph{typical error distribution}.
+In fact, we will derive a \emph{single} density function which gives a good approximation of the error distribution \emph{for any sufficiently regular input distribution}. We will call this distribution the \emph{typical error distribution}.
 
 We start by examining the quantity
 \[
@@ -205,33 +205,37 @@ We start by examining the quantity
 \]
 which appears in \eqref{eq:pdf}. Given a $t\in\left[-1,1\right]$, we determine which floating point numbers $z\in\F\setminus\{-\infty,0,\infty\}$ make $\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right)=1$. We will write floating point numbers $z\in\F$ in the form
 \[
-z=2^e\left(1+\frac{k}{2^p}\right)
+z=(-1)^s ~ 2^e \left(1+\frac{k}{2^p}\right)
 \]
-where $e$ ranges from $emin=1-n$ to $emax=n$ and $k$ ranges from 0 to $2^p-1$ (and represents the mantissa). We can explicitly compute $\floor{z}$ and $\ceil{z}$.
+where $s\in\{0,1\}$, $e$ ranges from $emin=1-n$ to $emax=n$ and $k$ ranges from 0 to $2^p-1$ (and represents the mantissa). We can explicitly compute $\floor{z}$ and $\ceil{z}$. When $s=0$ we have:
 \begin{align}
 \floor{z}=
 \begin{cases}
-z & \text{if }e=emin, k=0\\
-2^{e}\left(1-\frac{1}{2^{p+2}}\right) & \text{if }e>emin, k=0\\
+2^{e-1} & \text{if }s=0, e=emin, k=0\\
+2^{e-1}\left(1+\frac{2^{p+1}-1}{2^{p+1}}\right) & \text{if }s=0, e>emin, k=0\\
 2^e\left(1+\frac{2k-1}{2^{p+1}}\right) & \text{else}
 \end{cases}
 \end{align}
 and
 \begin{align}
 \ceil{z}=\begin{cases}
-z&\text{if }e=n, k=2^p-1\\
+z&\text{if }s=0, e=n, k=2^p-1\\
 2^e\left(1+\frac{2k+1}{2^{p+1}}\right) & \text{else}
 \end{cases}
 \end{align}
-Since $u=2^{-(p+1)}$, the condition $\floor{z}\leq \frac{z}{1-tu}\leq \ceil{z}$ thus becomes:
+For $s=1$ note simply that
+\begin{align}
+\floor{-z}=-\ceil{z}\qquad\text{and}\qquad\ceil{-z}=-\floor{z}\label{eq:minz}
+\end{align}
+Since $u=2^{-(p+1)}$, when $s=0$ the condition $\floor{z}\leq \frac{z}{1-tu}\leq \ceil{z}$ thus becomes:
 \begin{enumerate}
 \item If $e=emin, k=0$:
 \begin{align*}
-2^e\left(1-\frac{t}{2^{p+1}}\right)\leq 2^e\leq 2^e\left(1+\frac{1}{2^{p+1}}\right)\left(1-\frac{t}{2^{p+1}}\right)
+2^{e-1}\left(1-\frac{t}{2^{p+1}}\right)\leq 2^e\leq 2^e\left(1+\frac{1}{2^{p+1}}\right)\left(1-\frac{t}{2^{p+1}}\right)
 \end{align*}
 from which we get
 \begin{align}
-0\leq t\leq\frac{2^{p+1}}{2^{p+1}+1}\label{eq:trange1}
+-1\leq t\leq\frac{2^{p+1}}{2^{p+1}+1}\label{eq:trange1}
 \end{align}
 \item If $e>emin, k=0$:
 \[
@@ -241,7 +245,7 @@ from which we get:
 \begin{align}
 -\frac{2^{p+1}}{2^{p+2}-1}\leq t\leq \frac{2^{p+1}}{2^{p+1}+1}\label{eq:trange2}
 \end{align}
-\item If $e=n, k=2^p+1$:
+\item If $e=n, k=2^p-1$:
 \[
 2^e\left(1+\frac{2(2^p-1)-1}{2^{p+1}}\right)\left(1-\frac{t}{2^{p+1}}\right)\leq 2^e\left(1+\frac{2^p-1}{2^p}\right) \leq 2^e\left(1+\frac{2^p-1}{2^p}\right)\left(1-\frac{t}{2^{p+1}}\right)
 \]
@@ -259,49 +263,106 @@ from which we get:
 -\frac{2^{p+1}}{2^{p+1}+2k-1}\leq t\leq \frac{2^{p+1}}{2^{p+1}+2k+1}\label{eq:trange4}
 \end{align}
 \end{enumerate}
-
+The case for $s=1$ can then be derived from \eqref{eq:minz}:
+\[
+\floor{-z}\leq \frac{-z}{1-tu}\leq \floor{z} \qquad\Leftrightarrow\qquad -\ceil{z}\leq \frac{-z}{1-tu}\leq -\floor{z} \qquad\Leftrightarrow\qquad \floor{z}\leq \frac{z}{1-tu}\leq \ceil{z}
+\]
 
 Note that the upper bound of \eqref{eq:trange1}, \eqref{eq:trange2} and \eqref{eq:trange4} are compatible.
-The bounds $t_{min}$ and $t_{max}$ of \eqref{eq:trange4} are reached when the relations
+The bounds $t_{min}$ and $t_{max}$ of \eqref{eq:trange1}-\eqref{eq:trange4} are reached when the following relations are satisfied:
 \begin{align*}
 &\frac{1}{1-t_{max}u}=\frac{\ceil{z}}{z} & \frac{1}{1-t_{min}u}=\frac{\floor{z}}{z} & &\text{when } z\geq 0\\
 &\frac{1}{1-t_{min}u}=\frac{\ceil{z}}{z} & \frac{1}{1-t_{max}u}=\frac{\floor{z}}{z} & &\text{when } z\leq 0
 \end{align*}
 It follows that 
 \begin{align*}
-\frac{\ceil{z}-\floor{z}}{\absv{z}u}&=\frac{1}{u}\left(\frac{1}{1-t_{max}}-\frac{1}{1-t_{min}}\right)\\
-&=\frac{2^{p+1}}{2^p+k}
+\frac{\ceil{z}-\floor{z}}{\absv{z}}&=\left(\frac{1}{1-t_{max}u}-\frac{1}{1-t_{min}u}\right)=\frac{u(t_{max}-t_{min})}{(1-t_{max}u)(1-t_{min}u)}
 \end{align*}
 and thus
-\[
-\absv{z}u=(\ceil{z}-\floor{z})\frac{2^p+k}{2^{p+1}}
-\]
-
-We can use Eqs. \eqref{eq:trange1}-\eqref{eq:trange4} to express the possible values of $e,k$ for a given $t$. Using \eqref{eq:trange4}, we get when $t\geq 0$
 \begin{align}
-2^p\left(-\frac{1}{t}-1\right)+\frac{1}{2}\leq k\leq 2^p\left(\frac{1}{t}-1\right)-\frac{1}{2}
+\absv{z}u=\frac{(\ceil{z}-\floor{z})(t_{max}-t_{min})}{(1-t_{max}u)(1-t_{min}u)}\label{eq:absvzu}
+\end{align}
+where the coefficients $C(e,k):=\frac{(t_{max}-t_{min})}{(1-t_{max}u)(1-t_{min}u)}$ can be computed from Eqs. \eqref{eq:trange1}-\eqref{eq:trange4}.
+\begin{enumerate}
+\item  If $e=emin, k=0$:
+\[
+C(emin,0)=\frac{2^{p+1}+1}{2^p(2^{p+1}-1)}
+\]
+\item If $e>emin, k=0$:
+\[
+C(e,0)=\frac{2}{3}
+\]
+\item  If $e=n, k=2^p-1$:
+\[
+C(n,2^p-1)=\frac{3(2^{p+1}-1)}{2^{p+1}}
+\]
+\item Else:
+\[
+C(e,k)=\frac{2^p+k}{2^{p+1}}
+\]
+\end{enumerate}
+
+
+We now use Eqs. \eqref{eq:trange1}-\eqref{eq:trange4} to express the possible values of $s,e,k$ for a given $t$. To check whether $k=0$ is possible one can simply use Eqs. \eqref{eq:trange1} and \eqref{eq:trange2} and to see if $e=n, k=2^p+1$ is possible on simply uses \eqref{eq:trange3}. For all other values of the exponent and the mantissa, \eqref{eq:trange4}, gives for $t\geq 0$:
+\begin{align}
+2^p\left(-\frac{1}{t}-1\right)+\frac{1}{2}\leq k\leq 2^p\left(\frac{1}{t}-1\right)-\frac{1}{2}\label{eq:kfromtpos}
 \end{align}
 and when $t\leq 0$:
 \begin{align}
-2^p\left(\frac{1}{t}-1\right)-\frac{1}{2}\leq k\leq 2^p\left(-\frac{1}{t}-1\right)+\frac{1}{2}
+2^p\left(\frac{1}{t}-1\right)-\frac{1}{2}\leq k\leq 2^p\left(-\frac{1}{t}-1\right)+\frac{1}{2}\label{eq:kfromtneg}
 \end{align}
+Note that when $t\in\left[-\frac{1}{2},\frac{1}{2}\right]$, all combinations of $s,e,k$ are possible. For other values this will no longer be the case.
+We have now enough details to describe the typical distribution. For $t\in\left[-\frac{1}{2},\frac{1}{2}\right]$, \eqref{eq:pdf} combined with \eqref{eq:absvzu} becomes 
 
-We have now enough details to describe the typical distribution. We have:
+\begin{align}
+d(t)&=\sum_{z\in \F\setminus\{-\infty,0,\infty\}}f\left(\frac{z}{1-tu}\right) \frac{u\absv{z}}{(1-tu)^2}\nonumber
+\\
+=&\sum_{z\in \F\setminus\{-\infty,0,\infty\}}f\left(\frac{z}{1-tu}\right) \frac{1}{(1-tu)^2}\frac{(\ceil{z}-\floor{z})(t_{max}(z)-t_{min}(z))}{(1-t_{max}(z)u)(1-t_{min}(z)u)}&\nonumber
+\\
+=&\sum_{k=0}^{2^{p}-1}\left(\sum_{s=0}^1\sum_{e=emin}^{emax}f\left(\frac{z(e,s,k)}{1-tu}\right)\frac{C(e,k)(\ceil{z(e,s,k)}-\floor{z(e,s,k)})}{(1-tu)^2}\right)\nonumber 
+\\
+=&\sum_{k=0}^{2^p-1}\sum_{e=emin+1}^{emax-1}\sum_{s=0}^1 f\left(\frac{z(e,s,k)}{1-tu}\right)\frac{C(e,k)(\ceil{z(e,s,k)}-\floor{z(e,s,k)})}{(1-tu)^2}~+ \nonumber
+\\
+& \sum_{k=0}^{2^{p}-1}\sum_{s=0}^1 f\left(\frac{z(emin,s,k)}{1-tu}\right)\frac{C(emin,k)(\ceil{z(emin,s,k)}-\floor{z(emin,s,k)})}{(1-tu)^2}~+ \nonumber
+\\
+& \sum_{k=0}^{2^{p}-1}\sum_{s=0}^1 f\left(\frac{z(emax,s,k)}{1-tu}\right)\frac{C(emax,k)(\ceil{z(emax,s,k)}-\floor{z(emax,s,k)})}{(1-tu)^2}~+ \label{eq:pdf1/2}
+\end{align}
+Since $C(e,k)=\frac{2^p+k}{2^{p+1}}$ does not depend on $e$ when $emin<e<emax$ we can re-write the first term in the sum above as
+\[
+\sum_{k=0}^{2^p-1}\frac{C(e,k)}{(1-tu)^2}\sum_{e=emin+1}^{emax-1}\sum_{s=0}^1 f\left(\frac{z(e,s,k)}{1-tu}\right)(\ceil{z(e,s,k)}-\floor{z(e,s,k)})
+\]
+We now make three assumptions. Each assumption is formalized by exploiting the previous one(s).
+
+\begin{enumerate}
+\item \textbf{Assumption 1.} The probability density function is constant at the scale of the intervals between floating point numbers, i.e.
+\[
+\Pro{\Round(x)=z(e,s,k)}=\int_{\floor{z(e,s,k)}}^{\ceil{z(e,s,k)}} f(x)~dx \approx f\left(\frac{z(e,s,k)}{1-tu}\right)(\ceil{z(e,s,k)}-\floor{z(e,s,k)})
+\]
+for all values of $t$ such that $\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right)=1$.
+\item \textbf{Assumption 2.} The probability under $f$ of sampling a number whose rounding has exponent $emin$ or $emax$ is close to zero, i.e.
+\[
+ \sum_{k=0}^{2^{p}-1}\sum_{s=0}^1 f\left(\frac{z(emin,s,k)}{1-tu}\right)(\ceil{z(emin,s,k)}-\floor{z(emin,s,k)})\approx 0
+\]
+and
+\[
+ \sum_{k=0}^{2^{p}-1}\sum_{s=0}^1 f\left(\frac{z(emax,s,k)}{1-tu}\right)(\ceil{z(emax,s,k)}-\floor{z(emax,s,k)})\approx 0
+\]
+\item \textbf{Assumption 3.} When rounding a sample drawn from the distribution $f$, all mantissas are equally likely, i.e. for a given mantissa $k$
+\[
+\sum_{e=emin+1}^{emax-1}\sum_{s=0}^1 f\left(\frac{z(e,s,k)}{1-tu}\right)(\ceil{z(e,s,k)}-\floor{z(e,s,k)})\approx \frac{1}{2^p}
+\]
+for all values of $t$ such that $\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right)=1$.
+\end{enumerate}
+
+Under these assumptions, \eqref{eq:pdf1/2} becomes
 \begin{align*}
-1&=\int_{-\infty}^\infty f(s)~ds\\
-&\approx \sum_{z\in\F\setminus\{-\infty,0,\infty\}} f(z)(\ceil{z}-\floor{z})
+d(t)&\approx\sum_{k=0}^{2^p-1}\frac{C(e,k)}{(1-tu)^2}\sum_{e=emin+1}^{emax-1}\sum_{s=0}^1 f\left(\frac{z(e,s,k)}{1-tu}\right)(\ceil{z(e,s,k)}-\floor{z(e,s,k)})\\
+&\approx\frac{1}{2^p(1-tu)^2}\left(\frac{2}{3}+\sum_{k=1}^{2^p-1}\frac{2^p+k}{2^{p+1}}\right)\\
+&=\frac{1}{2^p(1-tu)^2}\left(\frac{2}{3}+\frac{3(2^{p}-1)}{4}\right)
 \end{align*}
-\textbf{Assumption:} the quadrature $\sum_{z\in\F\setminus\{-\infty,0,\infty\}} f(z)(\ceil{z}-\floor{z})$ gives a good approximation of $\int f(s)~ds$.
+If we assume further that $(1-tu)^2\approx 1$ we get that on $\left[-\frac{1}{2},\frac{1}{2}\right]$, $d(t)$ is equal to the constant $\left(\frac{2}{3}+\frac{3(2^{p}-1)}{4}\right)$ which itself is approximated well by $\frac{3}{4}$ for sufficiently large precision levels $p$.
 
-Note now that by using \eqref{eq:trange4} we get 
-\begin{align*}
-\frac{\ceil{z}-\floor{z}}{\absv{z}u}&=\frac{\ceil{z}}{\absv{z}u}+\frac{\floor{z}}{\absv{z}u}\\
-&=\frac{2^{p+1}}{2^{p+1}+2k-1}+ \frac{2^{p+1}}{2^{p+1}+2k+1}\\
-&=\frac{2^{p+1}}{2^p+k}
-\end{align*}
-where the absolute value $\absv{z}$ ensures that the result is always positive. This allows us to 
-
-
+As shown by Eqs \eqref{eq:kfromtpos} \eqref{eq:kfromtneg}, when $\absv{t}>\frac{1}{2}$, not all mantissas in the sum \eqref{eq:pdf1/2} are possible.
 %First we partition $\eR$ as the disjoint union
 %\[
 %\eR=\bigcup_{n\in \F}\Round\inv(n).
