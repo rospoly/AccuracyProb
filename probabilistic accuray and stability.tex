@@ -10,6 +10,7 @@
 \usepackage{bbm}
 \usepackage{color}
 \usepackage[all]{xy}
+\usepackage{graphicx}
 \usepackage{listings}
 \lstset{
 	language=C,
@@ -192,8 +193,11 @@ d(t):=&\dt c(t)\nonumber \\
 
 For many `typical' input distributions, the relative error distribution given by \eqref{eq:pdf}  always looks the same, as exemplified by the following diagram.
 
-\begin{figure}
-\caption{Relative error distribution for typical input distribution}
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.75]{Code/pics/several_examples}
+\end{center}
+\caption{Relative error distribution for four typical input distributions}
 \label{fig:errdist}
 \end{figure}
 
@@ -205,7 +209,7 @@ We start by examining the quantity
 \]
 which appears in \eqref{eq:pdf}. Given a $t\in\left[-1,1\right]$, we determine which floating point numbers $z\in\F\setminus\{-\infty,0,\infty\}$ make $\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right)=1$. We will write floating point numbers $z\in\F$ in the form
 \[
-z=(-1)^s ~ 2^e \left(1+\frac{k}{2^p}\right)
+z=z(s,e,k):=(-1)^s ~ 2^e \left(1+\frac{k}{2^p}\right)
 \]
 where $s\in\{0,1\}$, $e$ ranges from $emin=1-n$ to $emax=n$ and $k$ ranges from 0 to $2^p-1$ (and represents the mantissa). We can explicitly compute $\floor{z}$ and $\ceil{z}$. When $s=0$ we have:
 \begin{align}
@@ -227,7 +231,7 @@ For $s=1$ note simply that
 \begin{align}
 \floor{-z}=-\ceil{z}\qquad\text{and}\qquad\ceil{-z}=-\floor{z}\label{eq:minz}
 \end{align}
-Since $u=2^{-(p+1)}$, when $s=0$ the condition $\floor{z}\leq \frac{z}{1-tu}\leq \ceil{z}$ thus becomes:
+Since $u=2^{-(p+1)}$, when $s=0$ the condition $\floor{z}\leq \frac{z}{1-tu}\leq \ceil{z}$ becomes:
 \begin{enumerate}
 \item If $e=emin, k=0$:
 \begin{align*}
@@ -267,8 +271,6 @@ The case for $s=1$ can then be derived from \eqref{eq:minz}:
 \[
 \floor{-z}\leq \frac{-z}{1-tu}\leq \floor{z} \qquad\Leftrightarrow\qquad -\ceil{z}\leq \frac{-z}{1-tu}\leq -\floor{z} \qquad\Leftrightarrow\qquad \floor{z}\leq \frac{z}{1-tu}\leq \ceil{z}
 \]
-
-Note that the upper bound of \eqref{eq:trange1}, \eqref{eq:trange2} and \eqref{eq:trange4} are compatible.
 The bounds $t_{min}$ and $t_{max}$ of \eqref{eq:trange1}-\eqref{eq:trange4} are reached when the following relations are satisfied:
 \begin{align*}
 &\frac{1}{1-t_{max}u}=\frac{\ceil{z}}{z} & \frac{1}{1-t_{min}u}=\frac{\floor{z}}{z} & &\text{when } z\geq 0\\
@@ -303,7 +305,7 @@ C(e,k)=\frac{2^p+k}{2^{p+1}}
 \end{enumerate}
 
 
-We now use Eqs. \eqref{eq:trange1}-\eqref{eq:trange4} to express the possible values of $s,e,k$ for a given $t$. To check whether $k=0$ is possible one can simply use Eqs. \eqref{eq:trange1} and \eqref{eq:trange2} and to see if $e=n, k=2^p+1$ is possible on simply uses \eqref{eq:trange3}. For all other values of the exponent and the mantissa, \eqref{eq:trange4}, gives for $t\geq 0$:
+We now use Eqs. \eqref{eq:trange1}-\eqref{eq:trange4} to express the possible values of $s,e,k$ for a given $t$. To check whether $k=0$ is possible one can simply use Eqs. \eqref{eq:trange1} and \eqref{eq:trange2} and to see if $e=n, k=2^p+1$ is possible one simply uses \eqref{eq:trange3}. For all other values of the exponent and the mantissa, \eqref{eq:trange4}, gives for $t\geq 0$:
 \begin{align}
 2^p\left(-\frac{1}{t}-1\right)+\frac{1}{2}\leq k\leq 2^p\left(\frac{1}{t}-1\right)-\frac{1}{2}\label{eq:kfromtpos}
 \end{align}
@@ -355,14 +357,45 @@ for all values of $t$ such that $\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right)=1$
 \end{enumerate}
 
 Under these assumptions, \eqref{eq:pdf1/2} becomes
-\begin{align*}
-d(t)&\approx\sum_{k=0}^{2^p-1}\frac{C(e,k)}{(1-tu)^2}\sum_{e=emin+1}^{emax-1}\sum_{s=0}^1 f\left(\frac{z(e,s,k)}{1-tu}\right)(\ceil{z(e,s,k)}-\floor{z(e,s,k)})\\
-&\approx\frac{1}{2^p(1-tu)^2}\left(\frac{2}{3}+\sum_{k=1}^{2^p-1}\frac{2^p+k}{2^{p+1}}\right)\\
-&=\frac{1}{2^p(1-tu)^2}\left(\frac{2}{3}+\frac{3(2^{p}-1)}{4}\right)
-\end{align*}
+\begin{align}
+d(t)&\approx\sum_{k=0}^{2^p-1}\frac{C(e,k)}{(1-tu)^2}\sum_{e=emin+1}^{emax-1}\sum_{s=0}^1 f\left(\frac{z(e,s,k)}{1-tu}\right)(\ceil{z(e,s,k)}-\floor{z(e,s,k)})\nonumber
+\\
+&\approx\frac{1}{2^p(1-tu)^2}\left(\frac{2}{3}+\sum_{k=1}^{2^p-1}\frac{2^p+k}{2^{p+1}}\right)\nonumber
+\\
+&=\frac{1}{2^p(1-tu)^2}\left(\frac{2}{3}+\frac{3(2^{p}-1)}{4}\right)\label{eq:pdf1/2ass}
+\end{align}
 If we assume further that $(1-tu)^2\approx 1$ we get that on $\left[-\frac{1}{2},\frac{1}{2}\right]$, $d(t)$ is equal to the constant $\left(\frac{2}{3}+\frac{3(2^{p}-1)}{4}\right)$ which itself is approximated well by $\frac{3}{4}$ for sufficiently large precision levels $p$.
 
-As shown by Eqs \eqref{eq:kfromtpos} \eqref{eq:kfromtneg}, when $\absv{t}>\frac{1}{2}$, not all mantissas in the sum \eqref{eq:pdf1/2} are possible.
+As shown by Eqs \eqref{eq:kfromtpos} \eqref{eq:kfromtneg}, when $\absv{t}>\frac{1}{2}$, not all mantissas in the sum \eqref{eq:pdf1/2} are possible, and \eqref{eq:pdf1/2ass} becomes (for $t\geq 0$
+\begin{align*}
+d(t)&\approx\frac{1}{2^p(1-tu)^2}\left(\frac{2}{3}+\sum_{k=1}^{2^p(1/t-1)-1/2}\frac{2^p+k}{2^{p+1}}\right)
+\\
+&=\frac{1}{2^p(1-tu)^2}\left(\frac{2}{3}+\frac{1}{2}\floor{2^p(\frac{1}{t}-1)-\frac{1}{2}}+\frac{1}{2^{p+2}}(\floor{2^p(\frac{1}{t}-1)+\frac{1}{2}}\floor{2^p(\frac{1}{t}-1)-\frac{1}{2}})\right)
+\end{align*}
+where $\floor{2^p(\frac{1}{t}-1)-\frac{1}{2}}$ is the usual floor function applied to $2^p(\frac{1}{t}-1)-\frac{1}{2}$. Since we cannot give an analytic expression for this integer, it is useful to consider the limit behaviour for very large precision (\ie $p\to\infty$) in which case the expression $\ceil{2^p(1/t-1)-\frac{1}{2}}$ is very close to $2^p(\frac{1}{t}-1)-\frac{1}{2}$. The equation above then becomes
+\[
+d(t)\approx\frac{1}{(1-tu)^2}\left(\frac{1}{2}\left(\frac{1}{t}-1\right)+\frac{1}{4}\left(\frac{1}{t}-1\right)^2\right)
+\]
+in the limit where $p\to\infty$. The case where $t\leq -\frac{1}{2}$ is treated in the same way and yields the same asymptotic distribution. In the limit of large precisions, where $p\to \infty$ and if we take $(1-tu)^2\approx 1$ we thus get the density function 
+\[
+d(t)=\begin{cases}
+\frac{1}{(1-tu)^2}\left(\frac{1}{2}\left(\frac{1}{t}-1\right)+\frac{1}{4}\left(\frac{1}{t}-1\right)^2\right) & \text{if }t< \frac{-1}{2} \text{ or }t>\frac{1}{2}\\
+\frac{3}{4}&\text{if }t\in\left[-\frac{1}{2} ,\frac{1}{2}\right]
+\end{cases}
+\]
+We plot this density function $d(t)$ in Fig. \ref{fig:typical}. Note that this approximate distribution is clearly very close to the exact distributions plotted in Fig. \ref{fig:errdist}.
+
+
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.75]{Code/pics/typical_dist}
+\end{center}
+\caption{Typical distribution in the limit of large precision}
+\label{fig:typical}
+\end{figure}
+
+
 %First we partition $\eR$ as the disjoint union
 %\[
 %\eR=\bigcup_{n\in \F}\Round\inv(n).

@@ -1,4 +1,5 @@
 import simple_tests
+import numpy as np
 import matplotlib.pyplot as plt
 from error_model import ErrorModel
 from stats import plot_error
@@ -63,8 +64,34 @@ def test_operations():
 
 #main:
 start = time.time()
-test_scalar_products()
-#dist = pacal.UniformDistr(0 ,1 )
+#test_scalar_products()
+dist1 = pacal.UniformDistr(-10 ,10)
+dist2=pacal.UniformDistr(0,1)
+dist3=pacal.NormalDistr()
+dist4=pacal.NormalDistr(2,10)
+error1=ErrorModel(dist1,10,-15,16,32)
+error2=ErrorModel(dist2,10,-15,16,32)
+error3=ErrorModel(dist3,10,-15,16,32)
+error4=ErrorModel(dist4,10,-15,16,32)
+x=np.linspace(-1,1,201)
+y1=error1.pdf(x)
+y2=error2.pdf(x)
+y3=error3.pdf(x)
+y4=error4.pdf(x)
+plt.subplot(2,2,1)
+plt.plot(x,y1)
+plt.xlabel('U(-10,10)')
+plt.subplot(2,2,2)
+plt.plot(x,y2)
+plt.xlabel('U(0,1)')
+plt.subplot(2,2,3)
+plt.plot(x,y3)
+plt.xlabel('N(0,1)')
+plt.subplot(2,2,4)
+plt.plot(x,y4)
+plt.xlabel('N(2,10)')
+plt.subplots_adjust(hspace=0.3)
+plt.savefig("pics/several_examples")
 #test_error_model(U)
 #test_plot_error(dist)
 #test_operations()
