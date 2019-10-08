@@ -131,11 +131,11 @@ We define the (relative) rounding error as the quantity
 \[
 \frac{\absv{x-\Rep(\Round(x))}}{x}
 \]
-Suppose $x$ is sampled randomly from a probability distribution $\mu$ on $\R$ and then rounded by a map $\Round:\R\to\F$, \emph{what is the distribution of the (relative) error}? For now we will only consider the case where $\mu$ is absolutely continuous \wrt the Lebesgue measure, that is to say the case where $\mu$ has a probability density function $f$:
+Suppose $x$ is sampled randomly from a probability distribution $\mu$ on $\R$ and then rounded by the map $\Round:\R\to\F$, \emph{what is the distribution of the (relative) error}? For now we will only consider the case where $\mu$ is absolutely continuous \wrt the Lebesgue measure, that is to say the case where $\mu$ has a probability density function $f$:
 \[
 \mu(A):=\Pro{x\in A}=\int_Af(x)~dx
 \]
-For notational clarity we will write $\hat{x}:=\Rep(\Round(x))$. We choose to express the relative error in multiples of the unit roundoff $u$. This choice is arbitrary, but it allows us to normalize the distribution since the absolute value of the relative error is strictly bounded by $u$. In other words, we express the relative error as a distribution on $[-1,1]$ rather than $[-u,u]$. In order to compute the density function of this distribution we proceed in the standard way by first computing the cumulative distribution function and then taking its derivative, \ie we start by computing
+For notational clarity we will write $\hat{x}:=\Rep(\Round(x))$. We choose to express the relative error in multiples of the unit roundoff $u$. This choice is arbitrary, but it allows us to normalize the distribution since the absolute value of the relative error is strictly bounded by $u$. In other words, we express the relative error as a distribution on $[-1,1]$ rather than $[-u,u]$. In order to compute the density function of this distribution we proceed in the standard way by first computing the cumulative distribution function and then taking its derivative. We therefore start by computing
 \begin{align}\label{eq:cdf1}
 c(t):=\Pro{\frac{x-\hat{x}}{x}\leq tu}
 \end{align}
@@ -174,7 +174,7 @@ c(t)=&\sum_{z\in\F\setminus\{-\infty,0,\infty\}}\Pro{\frac{x-z}{x}\leq tu\wedge 
 \nonumber \\
 &\int_U^\infty f(s)~ds \label{eq:cdf3}
 \end{align}
-where $\F^-$ (resp. $\F^+$) are the negative (resp. positive) floating point numbers and $\one_{[a,b]}(x)$ is the usual indicator function which return 1 if $a\leq x\leq b$ and 0 otherwise.
+where $\F^-$ (resp. $\F^+$) are the negative (resp. positive) floating point numbers and $\one_{[a,b]}(x)$ is the usual indicator function which returns 1 if $a\leq x\leq b$ and 0 otherwise.
 
 
 
@@ -197,7 +197,7 @@ For many `typical' input distributions, the relative error distribution given by
 \begin{center}
 \includegraphics[scale=0.75]{Code/pics/several_examples}
 \end{center}
-\caption{Relative error distribution for four typical input distributions}
+\caption{Half-precision relative error distribution for four typical input distributions}
 \label{fig:errdist}
 \end{figure}
 
@@ -313,7 +313,7 @@ and when $t\leq 0$:
 \begin{align}
 2^p\left(\frac{1}{t}-1\right)-\frac{1}{2}\leq k\leq 2^p\left(-\frac{1}{t}-1\right)+\frac{1}{2}\label{eq:kfromtneg}
 \end{align}
-Note that when $t\in\left[-\frac{1}{2},\frac{1}{2}\right]$, all combinations of $s,e,k$ are possible. For other values this will no longer be the case.
+Note that when $t\in\left[-\frac{1}{2},\frac{1}{2}\right]$, all combinations of $s,e,k$ are possible, and some mantissas will have to be excluded. For other values this will no longer be the case.
 We have now enough details to describe the typical distribution. For $t\in\left[-\frac{1}{2},\frac{1}{2}\right]$, \eqref{eq:pdf} combined with \eqref{eq:absvzu} becomes 
 
 \begin{align}
@@ -349,6 +349,7 @@ and
 \[
  \sum_{k=0}^{2^{p}-1}\sum_{s=0}^1 f\left(\frac{z(emax,s,k)}{1-tu}\right)(\ceil{z(emax,s,k)}-\floor{z(emax,s,k)})\approx 0
 \]
+for all values of $t$ such that $\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right)=1$
 \item \textbf{Assumption 3.} When rounding a sample drawn from the distribution $f$, all mantissas are equally likely, i.e. for a given mantissa $k$
 \[
 \sum_{e=emin+1}^{emax-1}\sum_{s=0}^1 f\left(\frac{z(e,s,k)}{1-tu}\right)(\ceil{z(e,s,k)}-\floor{z(e,s,k)})\approx \frac{1}{2^p}
@@ -364,26 +365,26 @@ d(t)&\approx\sum_{k=0}^{2^p-1}\frac{C(e,k)}{(1-tu)^2}\sum_{e=emin+1}^{emax-1}\su
 \\
 &=\frac{1}{2^p(1-tu)^2}\left(\frac{2}{3}+\frac{3(2^{p}-1)}{4}\right)\label{eq:pdf1/2ass}
 \end{align}
-If we assume further that $(1-tu)^2\approx 1$ we get that on $\left[-\frac{1}{2},\frac{1}{2}\right]$, $d(t)$ is equal to the constant $\left(\frac{2}{3}+\frac{3(2^{p}-1)}{4}\right)$ which itself is approximated well by $\frac{3}{4}$ for sufficiently large precision levels $p$.
+If we assume further that $(1-tu)^2\approx 1$ we get that on $\left[-\frac{1}{2},\frac{1}{2}\right]$, $d(t)$ is equal to the constant $\frac{1}{2^p}\left(\frac{2}{3}+\frac{3(2^{p}-1)}{4}\right)$ which itself is approximated well by $\frac{3}{4}$ for sufficiently large precision levels $p$.
 
-As shown by Eqs \eqref{eq:kfromtpos} \eqref{eq:kfromtneg}, when $\absv{t}>\frac{1}{2}$, not all mantissas in the sum \eqref{eq:pdf1/2} are possible, and \eqref{eq:pdf1/2ass} becomes (for $t\geq 0$
+As shown by Eqs \eqref{eq:kfromtpos} \eqref{eq:kfromtneg}, when $\absv{t}>\frac{1}{2}$, not all mantissas in the sum \eqref{eq:pdf1/2} are possible, and for $t\geq 0$ \eqref{eq:pdf1/2ass} becomes 
 \begin{align*}
 d(t)&\approx\frac{1}{2^p(1-tu)^2}\left(\frac{2}{3}+\sum_{k=1}^{2^p(1/t-1)-1/2}\frac{2^p+k}{2^{p+1}}\right)
 \\
 &=\frac{1}{2^p(1-tu)^2}\left(\frac{2}{3}+\frac{1}{2}\floor{2^p(\frac{1}{t}-1)-\frac{1}{2}}+\frac{1}{2^{p+2}}(\floor{2^p(\frac{1}{t}-1)+\frac{1}{2}}\floor{2^p(\frac{1}{t}-1)-\frac{1}{2}})\right)
 \end{align*}
-where $\floor{2^p(\frac{1}{t}-1)-\frac{1}{2}}$ is the usual floor function applied to $2^p(\frac{1}{t}-1)-\frac{1}{2}$. Since we cannot give an analytic expression for this integer, it is useful to consider the limit behaviour for very large precision (\ie $p\to\infty$) in which case the expression $\ceil{2^p(1/t-1)-\frac{1}{2}}$ is very close to $2^p(\frac{1}{t}-1)-\frac{1}{2}$. The equation above then becomes
+where $\floor{2^p(\frac{1}{t}-1)-\frac{1}{2}}$ is the usual floor function applied to $2^p(\frac{1}{t}-1)-\frac{1}{2}$. Since we cannot give an analytic expression for this integer, it is useful to consider the limit behaviour for large precisions (\ie for $p\to\infty$) in which case the expression $\floor{2^p(1/t-1)-\frac{1}{2}}$ is very close to $2^p(\frac{1}{t}-1)-\frac{1}{2}$. The equation above then becomes
 \[
 d(t)\approx\frac{1}{(1-tu)^2}\left(\frac{1}{2}\left(\frac{1}{t}-1\right)+\frac{1}{4}\left(\frac{1}{t}-1\right)^2\right)
 \]
-in the limit where $p\to\infty$. The case where $t\leq -\frac{1}{2}$ is treated in the same way and yields the same asymptotic distribution. In the limit of large precisions, where $p\to \infty$ and if we take $(1-tu)^2\approx 1$ we thus get the density function 
-\[
+in the limit where $p\to\infty$. The case where $t\leq -\frac{1}{2}$ is treated in the same way and yields the same asymptotic distribution. In the limit of large precisions and if we take $(1-tu)^2\approx 1$ we thus get the \emph{typical error distribution} with density function 
+\begin{align}
 d(t)=\begin{cases}
 \frac{1}{(1-tu)^2}\left(\frac{1}{2}\left(\frac{1}{t}-1\right)+\frac{1}{4}\left(\frac{1}{t}-1\right)^2\right) & \text{if }t< \frac{-1}{2} \text{ or }t>\frac{1}{2}\\
 \frac{3}{4}&\text{if }t\in\left[-\frac{1}{2} ,\frac{1}{2}\right]
-\end{cases}
-\]
-We plot this density function $d(t)$ in Fig. \ref{fig:typical}. Note that this approximate distribution is clearly very close to the exact distributions plotted in Fig. \ref{fig:errdist}.
+\end{cases}\label{eq:typicalpdf}
+\end{align}
+We plot this density function $d(t)$ in Fig. \ref{fig:typical}. Note how close this approximate distribution is to the exact distributions plotted in Fig. \ref{fig:errdist}, even at half-precision level ($p=10$).
 
 
 
@@ -394,6 +395,9 @@ We plot this density function $d(t)$ in Fig. \ref{fig:typical}. Note that this a
 \caption{Typical distribution in the limit of large precision}
 \label{fig:typical}
 \end{figure}
+
+
+\subsection{Characterising `sufficiently regular input distributions'}
 
 
 %First we partition $\eR$ as the disjoint union
