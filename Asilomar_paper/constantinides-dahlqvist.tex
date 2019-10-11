@@ -6,6 +6,7 @@
 \usepackage{graphicx}
 \usepackage{cleveref}
 \usepackage{relsize}
+\usepackage{bbm}
 
 %% EDITING
 \newcommand{\ie}{i.e.\ }
@@ -13,7 +14,7 @@
 \crefname{section}{\S}{\S\S}
 \crefname{subsection}{\S}{\S\S}
 \crefname{subsubsection}{\S}{\S\S}
-\crefname{equation}{}{}
+\crefname{equation}{eq.}{}
 
 %% MATHS
 
@@ -37,6 +38,8 @@
 \newcommand{\iop}{~\mathrm{op}~}
 % Expectation
 \newcommand{\Exp}[1]{\mathbb{E}\left[#1\right]}
+% Indicator function
+\newcommand{\one}{\mathbbm{1}}
 %% General maths
 \newcommand{\absv}[1]{\vert #1\vert}
 \newcommand{\dt}{\frac{\partial}{\partial t}}
@@ -82,7 +85,7 @@ These bounds however are only useful for large programs. Here we will derive a p
 
 In order to use the probabilistic model given by \cref{eq:probabilistic} we must specify the distribution $dist$ of the random variable $\delta$. Is there a `correct' choice? If there is, what is the correctness criterion? 
 
-In this section we will derive the correct distribution for a very natural criterion and show that very often it can be approximated remarkably well by a specific distribution which we shall call the \emph{typical distribution}. 
+In this section we will derive the correct distribution for a very natural criterion and show that very often it can be approximated remarkably well by a simple distribution which we shall call the \emph{typical distribution}. 
 
 \subsection{The rounding error distribution}\label{subsec:error_dist}
 
@@ -92,7 +95,7 @@ x \longrightarrow x(1+\delta)\qquad \delta\sim dist.\label{eq:rounding}
 \end{align}
 Since each IEEE arithmetic operation can be understood as implicitly performing a rounding operation on the corresponding infinite-precision operation, the probabilistic rounding above naturally yields \cref{eq:probabilistic}. The key is thus to find a good candidate for the distribution $dist$ governing probabilistic rounding.
 
-As discussed in the introduction, we consider numerical programs as probabilistic programs. In particular, all inputs come with probability distributions, and we should consider the variable $x$ in \cref{eq:rounding} as a sample from a real random variable $X$ with known distribution $\mu_x$. It is then completely natural to require that:
+As discussed in the introduction, we consider numerical programs as probabilistic programs. In particular, all inputs come with probability distributions, and we should consider the variable $x$ in \cref{eq:rounding} as a sample from a real random variable $X$ with known probability distribution $\mathbb{P}$. It is then completely natural to require that:
 \[
 \frac{X-\round(X)}{X}~\sim~dist
 \]
@@ -101,7 +104,7 @@ As discussed in the introduction, we consider numerical programs as probabilisti
 \ceil{x}&\stackrel{\triangle}{=}\sup\{z\in\R\mid \round(z)=\round(x)\}\\
 \floor{x}&\stackrel{\triangle}{=}\inf\{z\in\R\mid \round(z)=\round(x)\}.
 \end{align*}
-Whether $\ceil{x}$ is the largest real rounding to the same value as $x$ or just the supremum of this set will in general depend both on $x$ and on the exact rounding convention, and similarly for $\floor{x}$. We also define the sets 
+Whether $\ceil{x}$ is the maximal real which rounds to the same value as $x$, or just the supremum of this set, will in general depend both on $x$ and on the rounding convention, and similarly for $\floor{x}$. We also define the sets 
 \[
 \fintvl\stackrel{\triangle}{=}\left\{z\in\R\mid \round(z)=\round(x)\right\}
 \]  
@@ -110,9 +113,9 @@ In particular if $z$ is a floating-point representable number -- notation $z\in\
 We choose to express the distribution $dist$ of relative errors in multiples of the unit roundoff $u$. This choice is arbitrary, but it allows us to normalize the distribution since the absolute value of the relative error is strictly bounded by $u$. In other words, we express the relative error as a distribution on $[-1,1]$ rather than $[-u,u]$. In order to compute the density function of $dist$ we proceed in the standard way by first computing the cumulative distribution function $c(t)$ and then taking its derivative. We therefore start by computing
 \begin{align*}
 c(t)\stackrel{\triangle}{=}&~\Pro{\frac{X-\widehat{X}}{X}\leq tu}\\
-=&~\Pro{\bigvee_{z\in\F}\left(\frac{X-z}{X}\leq tu\wedge X\in \fintvl[z]\right)}
+=&~\Pro{~\bigvee_{z\in\F}\left(\frac{X-z}{X}\leq tu\wedge X\in \fintvl[z]\right)}
 \end{align*}
-We now need to consider some special cases:
+We now need to consider three special cases:
 \begin{enumerate}
 \item If $X\in \fintvl[0]$ then $\frac{X-\widehat{X}}{X}=1$ and thus (since $tu<1$):
 \begin{align}\label{eq:cdfnot0}
@@ -124,10 +127,10 @@ We now need to consider some special cases:
 \end{align}
 \item Finally, if $X\in \fintvl[\infty]$ then $\frac{X-\widehat{X}}{X}=-\infty$ and thus 
 \begin{align}\label{eq:cdfpinf}
-\Pro{\frac{X-\infty}{X}\leq tu\wedge X\in \fintvl[\infty]}=\Pro{X\in \fintvl[\infty]}
+\hspace{-3em}\Pro{\frac{X-\infty}{X}\leq tu\wedge X\in \fintvl[\infty]}=\Pro{X\in \fintvl[\infty]}
 \end{align}
 \end{enumerate}
-Using \eqref{eq:cdfnot0}-\eqref{eq:cdfpinf} and the additivity of measures we get the density
+Using the fact that \eqref{eq:cdfnot0}-\eqref{eq:cdfpinf} yield expressions which are independent of $t$ we get the density
 \begin{align*}
 d(t)=&\dt c(t)\\
 =&\dt\sum_{z\in\F\setminus\{-\infty,0,\infty\}}\hspace{-1em}\Pro{\frac{X-z}{X}\leq tu\wedge X\in \fintvl[z]}\\
@@ -135,19 +138,90 @@ d(t)=&\dt c(t)\\
 &\sum_{z\in\F^+\setminus\{0,\infty\}}\dt\Pro{\frac{z}{1-tu}\leq X \wedge X\in \fintvl[z]}
 \end{align*}
 where $\F^+$ and $\F^-$ denote the positive (resp. negative) floating-point representable numbers.
-
-Suppose now that $X$ is described by a probability density function $f:\R\to\R$, we then have:
+Suppose now that $X$ is described by a probability density function $f:\R\to\R$, we then get:
+\begin{align}
+d(t)
+=&\hspace{-1ex}\sum_{z\in\F^-\setminus\{-\infty,0\}}\dt\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) \int^{\frac{z}{1-tu}}_{\floor{z}} f(s)~ds+\nonumber 
+\\
+&\sum_{z\in\F^+\setminus\{0,\infty\}}\dt\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) \int^{\ceil{z}}_{\frac{z}{1-tu}} f(s)~ds\nonumber 
+\\
+=&\hspace{-1ex}\sum_{z\in\F^-\setminus\{-\infty,0\}}\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) f\left(\frac{z}{1-tu}\right) \frac{-uz}{(1-tu)^2}\nonumber
+\\
+& +\sum_{z\in\F^+\setminus\{0.\infty\}}\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) f\left(\frac{z}{1-tu}\right) \frac{uz}{(1-tu)^2}\nonumber 
+\\
+=&\hspace{-1ex}\sum_{z\in\F\setminus\{-\infty,0,\infty\}}\one_{\fintvl[z]}\left(\frac{z}{1-tu}\right) f\left(\frac{z}{1-tu}\right) \frac{u\absv{z}}{(1-tu)^2}\label{eq:errorDensity}
+\end{align}
+where $\one_{A}(x)$ is the usual indicator function which returns 1 if $x\in A$ and 0 otherwise. For low precisions, that is to say up to half-precision (5 bits exponent, 10 bits mantissa), it is possible to explicitly go through all floating point numbers and compute the density of the rounding error distribution $dist$ by using \cref{eq:errorDensity}. 
 
 \subsection{The typical rounding error distribution}
+Interestingly, when computing the error density \cref{eq:errorDensity} for a wide variety of well-known input distribution, one very often obtains more or less the same curve. This phenomenon is illustrated in \cref{fig:errdist} where the half-precision error density computed via \cref{eq:errorDensity} is displayed for uniform distributions over $\left[-10,10\right]$ and $\left[0,1\right]$ and for normal distributions with parameters $\mu=0,\sigma=2$ and $\mu=2,\sigma=10$ respectively. The reader will notice immediately that all the curves are nearly identical.
 
-\begin{itemize}
-\item Show that under mild assumptions on the distribution of $X$, the distribution of rounding errors is given by the roughly trapezoidal distribution of Fig \ref{fig:trapeze}.
+\vspace{-1em}
+\begin{figure}[h!]
+\hspace{-3em}
+\includegraphics[scale=0.65]{pics/several_examples}
+\caption{Half-precision relative error distribution for four typical input distributions}
+\label{fig:errdist}
+\end{figure}
+
+In this section we will sketch how, under some regularity assumptions about the input distribution, the error density of \cref{eq:errorDensity} can be approximated by a simple, piecewise polynomial curve which we shall call the \emph{typical error distribution}. The precise mathematical derivation of this curve being relatively long, we refer the reader to XXX for the full details. Here we will simply specify conditions under which the error distribution given by \cref{eq:errorDensity} is close to the typical distribution. Let $z(e,s,k)$ denote the floating-point representable real with exponent $e$, sign $(-1)^s$ and mantissa $k$, and let $e_{min}$ and $e_{max}$ denote the smallest and largest exponents respectively. Given a $t\in \left[-1,1\right]$, one can show that the mantissas such that
+\begin{align}
+\one_{\fintvl[z(e,s,k)]}\left(\frac{z(e,s,k)}{1-tu}\right)=1\label{eq:membership}
+\end{align}
+are given by 
+\begin{align}
+k\leq 2^p\left(\frac{1}{\absv{t}}-1\right)-\frac{1}{2}\label{eq:mantissas}
+\end{align}
+Note that for $t\in \left[-\frac{1}{2},\frac{1}{2}\right]$ \cref{eq:mantissas} always holds, \ie all mantissa are compatible with \cref{eq:membership}.
+We can now specify our assumptions.
+
+\noindent \textbf{Assumption 0.} The probability density function is constant at the scale of the intervals between floating point numbers, \ie
+\begin{align*}
+\Pro{\round(x)=z}
+&=\int_{\floor{z}}^{\ceil{z}} f(x)~dx 
+\\
+&\approx f\left(\frac{z}{1-tu}\right)(\ceil{z}-\floor{z})
+\end{align*}
+for all values of $t$ such that \cref{eq:membership} holds.
+
+\noindent  \textbf{Assumption 1.} Writing $z(s,k)$ for $z(e_{min},s,k)$ assume that:
+\[
+\sum_{\substack{0\leq k<2^p\\ s\in\{0,1\}}}\hspace{-3pt}\one_{\fintvl[z]}\hspace{-3pt}\left(\frac{z(s,k)}{1-tu}\right)f\hspace{-2pt}\left(\frac{z(s,k)}{1-tu}\right)(\ceil{z(s,k)}-\floor{z(s,k)})\approx 0
+\]
+and similarly for $z(s,k)=z(e_{max},s,k)$.
+Under Assumption 0, this condition says that the probability under $f$ of sampling a number whose rounding has exponent $e_{min}$ or $e_{max}$ is close to zero. This condition is certainly met for the distributions of \cref{fig:errdist} and half-precision.
+
+\noindent \textbf{Assumption 2.} Given $t\in\left[-1,1\right]$, for every $k$ satisfying \cref{eq:mantissas} we assume
+\[
+\sum_{\substack{e_{min}<e<e_{max}\\ s\in\{0,1\}}}f\left(\frac{z(e,s,k)}{1-tu}\right)(\ceil{z(e,s,k)}-\floor{z(e,s,k)})\approx \frac{1}{2^p}
+\]
+Under Assumption 0, this condition means that when rounding a sample drawn from the distribution $f$, all mantissas are equally likely.
+
+Under Assumptions 0-2 one can show that for $t\in\left[-\frac{1}{2},\frac{1}{2}\right]$
+\begin{align}
+d(t)\approx\frac{1}{2^p(1-tu)^2}\left(\frac{2}{3}+\frac{3(2^{p}-1)}{4}\right)\label{eq:pdfmiddle}
+\end{align}
+Similarly, under Assumptions 0-2 one has for $\absv{t}>\frac{1}{2}$:
+\begin{align}
+d(t)\approx\frac{1}{2^p(1-tu)^2}& \left(\frac{2}{3}+\frac{1}{2}\floor{2^p(\frac{1}{t}-1)-\frac{1}{2}}+\right. \nonumber 
+\\
+&\left.\frac{1}{2^{p+2}}(\floor{2^p(\frac{1}{t}-1)+\frac{1}{2}})^2\right)\label{eq:pdfwings}
+\end{align}
+where $\floor{2^p(\frac{1}{t}-1)+\frac{1}{2}}$ here denotes the usual floor function.
+Combining \cref{eq:pdfmiddle} and \cref{eq:pdfwings} we get under Assumptions 0-2 that as $p\to\infty$ the error density $d(t)$ is well approximated by the \emph{typical density}:
+\begin{align}
+d_{typ}(t)=\begin{cases}
+\frac{3}{4}&\absv{t}\leq\frac{1}{2}
+\\
+\frac{1}{2}\left(\frac{1}{t}-1\right)+\frac{1}{4}\left(\frac{1}{t}-1\right)^2 & \absv{t}>\frac{1}{2}
+\end{cases}\label{eq:typicalpdf}
+\end{align} 
+which is represented in \cref{fig:typical} and is clearly a good approximation of the exact densities of \cref{fig:errdist}.
 \begin{figure}[ht!]
 \includegraphics[scale=0.55]{pics/typical_dist}
 \caption{Typical distribution of rounding errors (in unit roundoffs)}
-\label{fig:trapeze}
+\label{fig:typical}
 \end{figure}
-\end{itemize}
 
 
 
