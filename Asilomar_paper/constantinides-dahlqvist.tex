@@ -7,6 +7,7 @@
 \usepackage{cleveref}
 \usepackage{relsize}
 \usepackage{bbm}
+\usepackage{enumerate}
 
 %% EDITING
 \newcommand{\ie}{i.e.\ }
@@ -85,7 +86,7 @@ The probabilistic model of \cref{eq:probabilistic} is not new, it can be traced 
 and Ipsen \cite{ipsen2019probabilistic}. Interestingly, because \cite{higham2019new} and \cite{ipsen2019probabilistic} are interested in large-dimensional problems, neither work needs to explicitly specify the distribution $dist$ in \cref{eq:probabilistic}. Instead, \cite{higham2019new} requires that each sample from $dist$ be independent and that $\Exp{\delta}=0$, whilst \cite{ipsen2019probabilistic} just requires that $\Exp{\delta}=0$. By using concentration of measure inequalities the authors then obtain probabilistic bounds which are independent of any particular choice of distribution. 
 These bounds however are only useful for large programs. Here we will derive a principled distribution $dist$ for the relative error $\delta$ in order to apply the probabilistic model \cref{eq:probabilistic} to small to medium programs, in particular some benchmark from the literature on verification of numerical programs.
 
-\section{Two probabilistic models of rounding errors}
+\section{Two probabilistic models of rounding errors}\label{sec:rounding}
 
 In order to use the probabilistic model given by \cref{eq:probabilistic} we must specify the distribution $dist$ of the random variable $\delta$. In this section we will show how to derive the distribution of rounding errors from first principles. This will yield a distribution which is computable for low precisions (\eg half-precision and lower) but becomes prohibitively expensive computationally for single- and double-precision. We will then show that very often the rounding error distribution can be approximated remarkably well by a simple distribution which we shall call the \emph{typical distribution}. The quality of this approximation increases with the working precision and we thus derive both an exact, computable model of rounding errors for low-precisions, and a simple but good approximating model of rounding errors for high-precisions.
 
@@ -239,7 +240,7 @@ A remark to the effect that assumptions 0-2 are increasingly likely to be met as
 
 \section{Probabilistic interpretation of simple expressions}
 
-\subsection{A simple syntax}
+\subsection{A simple syntax}\label{subsec:syntax}
 
 The numerical expressions which we will investigate are given by the following simple grammar.
 \begin{align*}
@@ -256,9 +257,17 @@ The numerical expressions which we will investigate are given by the following s
 &\tt p::= skip \mid \mathtt{x_i:=t}\mid \mathtt{p~;~p} \mid if~b~then~p~else~p
 \end{align*}
 
-For every expression $\mathtt{p}$, we consider the list $\{\mathtt{x_1,\ldots,x_n}\}$ of variables appearing in $\mathtt{p}$. We view all variables as public variables and we will associate to each of them a real random variable $X_i, 1\leq i\leq n$ modelling its (probabilistic) state. We will call this data the \emph{probabilistic context} and denote it $\{\mathtt{x_1}\sim X_1,\ldots,\mathtt{x_n}\sim X_n\}$.  We also assume an exponent range $e_{min}, e_{max}$ and a precision level $p$ throughout.
+For every expression $\mathtt{p}$, we consider the list $\{\mathtt{x_1,\ldots,x_n}\}$ of variables appearing in $\mathtt{p}$. We view all variables as public variables and we will associate to the list $\{\mathtt{x_1,\ldots,x_n}\}$ a multivariate random variable (random vector) $\mathbf{X}$ modelling its (probabilistic) state. We will call this data the \emph{probabilistic context} and denote it $\{(\mathtt{x_1},\ldots,\mathtt{x_n})\sim\mathbf{X}\}$. We will denote by $X_i$ the $i^{th}$ marginal of $\mathbf{X}$. The cumulative distribution function of $\mathbf{X}$ will be given by
+\[
+\Pro{X_1\leq x_1,\ldots, X_n\leq x_n}.
+\] 
+Typically, a program will receive as inputs a product of univariate random variables. In other words, at the initial state we typically have $\mathbf{X}=X_1\ldots X_n$ whose cumulative density function is given by
+\[
+\Pro{X_1\leq x_1,\ldots, X_n\leq x_n}=\Pro{X_1\leq x_1}\ldots\Pro{X_n\leq x_n}
+\] 
+We assume a fixed exponent range $e_{min}, e_{max}$ and precision level $p$ throughout.
 
-\subsection{Random variable arithmetic}
+\subsection{Random variable arithmetic}\label{subsec:rvarithmetic}
 
 It is relatively well-known that arithmetic operations on random variables which posses a density function (\wrt the Lebesgue measure) translate into operations on these densities \cite{springer1979algebra}. In particular the density of the sum of two random variable is given by the convolution of the densities. In more detail one has the following correspondence:
 \begin{align}
@@ -275,14 +284,15 @@ Similarly, addition and multiplication by a scalar correspond to
 
 \subsection{Probabilistic interpretation}
 
-For any random variable $X$ with density $f_X$, we will define the \emph{error of $X$} -- notation $\Err(X)$ -- as the random variable $\frac{X-\widehat{X}}{X}$ whose density is given by \cref{eq:errorDensity}.
+For any random variable $X$ with density $f_X$, we define the \emph{error of $X$} -- notation $\Err(X)$ -- as the random variable $\frac{X-\widehat{X}}{X}$ whose density is given by \cref{eq:errorDensity}. 
 
-\subsubsection{Input quantization} Given a probabilistic context, the first question is to decide whether we need to model an initial quantization. This would correspond, for example, to modelling the quantization of an analog input (\eg a sensor) or of an input generated at a higher precision level (\eg a routine at half-precision level receiving input in double-precision). If we choose to model this step, then we need to add a probabilistic error term to each input, this is achieved by the probabilistic quantization
+\subsubsection{Input quantization} Given a probabilistic context, the first question is to decide whether we need to model an initial quantization. This would correspond for example to modelling the quantization of an analog input (\eg a sensor) or of an input generated at a higher precision level (\eg a routine at half-precision level receiving input in double-precision). If we choose to model this step, then we need to add a probabilistic error term to each input, this is achieved by the probabilistic quantization sending $\mathbf{X}$ to the multivariate distribution with cumulative distribution function
 \[
-X\longrightarrow X(1+\Err(X))
+\Pro{X_1(1+\Err(X_1)\leq x_1\ldots\leq X_n(1+\Err(X_n)}
 \] 
+where the explicit computation of the random variables $X_1(1+\Err(X_i))$ can be performed using the densities derived in \cref{sec:rounding} and the operations on densities defined in \cref{subsec:rvarithmetic}.
 
-\subsubsection{Terms} will be modelled as random variables using the following inductive definition:
+\subsubsection{Terms} will be modelled as (univariate) random variables using the following inductive definition:
 \begin{align*}
 model(\mathtt{r})&= r\text{, the constant r.v.}\\
 model(\mathtt{x_i})&= X_i\\
@@ -290,26 +300,50 @@ model(\mathtt{t_1\mop t_2})&=\left(model(\mathtt{t_1})\iop model(\mathtt{t_2})\r
 & \hspace{12pt}\left(1+\Err(model(\mathtt{t_1})\iop model(\mathtt{t_2}))\right)
 \end{align*}
 
-Note how we model the arithmetic operations in accordance with the fundamental model of \cref{eq:probabilistic}: we first compute the random variable $model(\mathtt{t_1})\iop model(\mathtt{t_2})$ which corresponds to the infinite-precision operation, and we then add a probabilistic error term whose distribution is computed from the distribution of $model(\mathtt{t_1}\iop\mathtt{t_2})$ itself.
+Note how we model the arithmetic operations in accordance with the fundamental model of \cref{eq:probabilistic}: we first compute the random variable $model(\mathtt{t_1})\iop model(\mathtt{t_2})$ (typically using the operations on densities defined in \cref{subsec:rvarithmetic}) which corresponds to the infinite-precision operation, and we then add a probabilistic error term whose distribution is computed from the distribution of $model(\mathtt{t_1})\iop model(\mathtt{t_2})$ itself using the densities derived in \cref{sec:rounding}.
 
-\subsubsection{Tests} correspond to the obvious subset of $\R^n$ generated by the comparisons. Thus if $\mathtt{t(x_1,\ldots,x_n)}$ is a term on $n$ variables 
+\subsubsection{Tests} correspond to the obvious subset of $\R^n$ generated by the comparisons. Thus if $\mathtt{t}(x_1,\ldots,x_n)$ is a term in $n$ variables 
 \[
 model(\mathtt{t<r})=\{(x_1,\ldots,x_n)\in\R^n\mid \mathtt{t}(x_1,\ldots,x_n)<r\}
 \]
 and similarly for $\mathtt{t>r}$ and $\mathtt{t==r}$. Note that terms are not viewed as probabilistic in this context, simply as a way of specifying a subset of $\R^n$.
 
-\subsubsection{Expressions} will be modelled as operations sending $n$ random variables (one for each variable) to $n$ random variables. In effect, updating the probabilistic context.
+\subsubsection{Expressions} will be modelled as operations sending multivariate random variables to multivariate random variables. In effect, updating the probabilistic context.
 
+\begin{enumerate}[(i)]
+\item $\mathtt{skip}$:
+\[
+model(\mathtt{skip})(\mathbf{X})=\mathbf{X}
+\]
+\item Assignments: $model(\mathtt{x_i:=t})(\mathbf{X})$ is the multivariate random variable whose cumulative distribution function is given by
 \begin{align*}
-model(\mathtt{skip})(X_1,\ldots,X_n)&=(X_1,\ldots,X_n)\\
-model(\mathtt{x_i}:=t)(X_1,\ldots,X_n)&=(X_1,, X_{i-1},model(\mathtt{t}),X_{i+1},\ldots,X_n)\\
-model(\mathtt{p_1~;~p_2})(X_1,\ldots,X_n)&=model(\mathtt{p_2})(model(\mathtt{p_1})(X_1,\ldots,X_n))
+\mathbb{P}[&X_1\leq x_1,\ldots,X_{i-1}\leq x_{i-1},model(\mathtt{t})\leq x_i, 
+\\
+& X_{i+1}\leq x_{i+1},\ldots, X_{n}\leq x_n]
 \end{align*}
+\item Sequential composition:
+\[
+model(\mathtt{p_1~;~p_2})(\mathbf{X})=model(\mathtt{p_2})(model(\mathtt{p_1})(\mathbf{X}))
+\]
+\end{enumerate}
 
+For $\mathtt{if~then~else}$ statements we need to introduce the following notation: if $B\subseteq \R^n$ is a measurable subset of $\R^n$ and $\mathbf{X}$ is a multivariate random variable in $R^n$, then $\mathbf{X}_B$ will denote the multivariate random variable with cumulative distribution function
+\[
+\Pro{X_1\leq x_1,\ldots,X_n\leq x_n \wedge (X_1,\ldots,X_n)\in B}
+\]
+With this notation we can now define
+\begin{enumerate}
+\item[(iv)] Conditionals:
+\begin{align*}
+ model&(\mathtt{if~b~then~p_1~else~p_2})(\mathbf{X})=
+\\
+&model(\mathtt{p_1})\hspace{-3pt}\left(\mathbf{X}_{model(\mathtt{b})}\right)+model(\mathtt{p_2})\hspace{-3pt}\left(\mathbf{X}_{model(\mathtt{b})^c}\right)
+\end{align*}
+where $model(\mathtt{b})^c$ is the complement of $model(\mathtt{b})$
+\end{enumerate}
 
+The rules given above allows us (in principle) to compute the output distribution of any expression given by the grammar of \cref{subsec:syntax}. By construction this output will include the cumulative and combined effect of every probabilistic rounding occurring through arithmetic operations via the model \eqref{eq:probabilistic}.
 \section{Experimental results}
-
-\subsection{Stability: ray tracing via the slabs method}
 
 \bibliographystyle{plain}
 \bibliography{bib/constantinides-dahlqvist}
