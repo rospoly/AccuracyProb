@@ -349,21 +349,27 @@ The rules given above allows us (in principle) to compute the output distributio
 
 \section{Experimental results}\label{sec:exp}
 
-We have implemented the probabilistic interpretation of the \emph{terms} defined in \cref{subsec:syntax} whose syntax has the structure of a tree, that is to say terms where variables are not repeated (in which case the syntax would be a DAG). We can thus compute the probabilistic interpretation of $\tt (x+y)/(z\ast t)$ but not of $\tt (x+y)/(x\ast y)$. The reason for this current limitation is a two occurrences of the same variable must be interpreted as two perfectly correlated random variables, \ie a probability distribution whose support lies on the diagonal of $\R^2$. Such a distribution cannot have a two-dimensional density function, and this renders their representation highly-non trivial. For the time being we leave this problem to future work.
+We have implemented the probabilistic interpretation of the class of terms defined in \cref{subsec:syntax} whose syntax has the structure of a tree, that is to say terms where variables are not repeated (in which case the syntax would be a DAG). We can thus compute the probabilistic interpretation of $\tt (x+y)/(z\ast t)$ but not of $\tt (x+y)/(x\ast y)$. The reason for this current limitation is that two occurrences of the same variable must be interpreted as two perfectly correlated random variables, \ie a probability distribution whose support lies on the diagonal of $\R^2$. Such a distribution cannot have a two-dimensional density function, and this renders their representation highly-non trivial. For the time being we leave this problem to future work.
 
 As shown in \cref{subsec:sem}, the interpretation of terms is computed by performing arithmetic operations on random variables. For random variables whose probability distribution is representable by density functions, \cref{subsec:rvarithmetic} shows how these arithmetic operations can be implemented in practise. A sophisticated version of \cref{eq:pdfplus}-\cref{eq:pdfdiv} is implemented in the Python library PaCAL
 \cite{jaroszewicz2012arithmetic}\cite{korzen2014pacal} on which we have based the evaluation of the probabilistic interpretation of terms.
 
 \subsection{Rounding error distribution}
+Our implementation focuses on computations performed in low precision, that is to say half-precision or lower. We therefore compute the distribution of relative errors using the exact analytic formula \cref{eq:errorDensity}.
+
+PaCAL concretely implements random variables as a density function represented by a piecewise Chebyshev interpolation polynomial. We therefore use the same representation and concretely represent the density \cref{eq:errorDensity} as a Chebyshev interpolating polynomial. The polynomial interpolation is performed using the library \texttt{pychebfun}, a Python implementation of the library \texttt{chebfun} \cite{battles2004extension} developed to perform accurate and fast computations on functions represented as Chebyshev polynomial interpolations.
+
+Figure \ref{fig:impl:errdist} shows a plot of the half-precision error distribution for a random variable distributed uniformly on $\left[0,1\right]$. The black line is the density represented as a Chebyshev interpolating polynomial, the blue area is a histogram of the relative rounding error on one million samples.
 
 \begin{figure}[h!]
 \hspace{-3em}
 \includegraphics[scale=0.60]{pics/Relative_Error_Distribution}
-\caption{Half-precision error density function for a random variable distributed uniformly on $\left[0,1\right]$ (black) vs histogram of relative errors for xxx samples drawn from the uniform distribution on $\left[0,1\right]$.}
-\label{fig:errdist}
+\caption{Implemented density function vs Monte-Carlo simulation.}
+\label{fig:impl:errdist}
 \end{figure}
 
 \subsection{Range analysis}
+
 \bibliographystyle{plain}
 \bibliography{bib/constantinides-dahlqvist}
 
