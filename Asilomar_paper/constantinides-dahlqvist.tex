@@ -89,6 +89,9 @@ The probabilistic model of \cref{eq:probabilistic} is not new, it can be traced 
  More recently, the model of \cref{eq:probabilistic} has been investigated by Higham \cite{higham2019new}
 and Ipsen \cite{ipsen2019probabilistic}. Interestingly, because \cite{higham2019new} and \cite{ipsen2019probabilistic} are interested in large-dimensional problems, neither work needs to explicitly specify the distribution $dist$ in \cref{eq:probabilistic}. Instead, \cite{higham2019new} requires that each sample from $dist$ be independent and that $\Exp{\delta}=0$, whilst \cite{ipsen2019probabilistic} just requires that $\Exp{\delta}=0$. By using concentration of measure inequalities the authors then obtain probabilistic bounds which are independent of any particular choice of distribution. 
 These bounds however are only applicable to a small class of problem (inner product, matrix multiplication and matrix factorisation algorithms) with very large inputs. Here we will derive a principled distribution $dist$ for the relative error $\delta$ and build a tool implementing the probabilistic model \cref{eq:probabilistic} to any small to medium-sized programs in a systematic way.
+
+GEORGE TO INSERT A SENTENCE ON \cite{constantinides2007synthesis}.
+
 \section{Two probabilistic models of rounding errors}\label{sec:rounding}
 
 In order to use the probabilistic model given by \cref{eq:probabilistic} we must specify the distribution $dist$ of the random variable $\delta$. In this section we will show how to derive the distribution of rounding errors from first principles. This will yield a distribution which is computable for low precisions (\eg half-precision and lower) but becomes prohibitively expensive computationally for single- and double-precision. We will then show that very often the rounding error distribution can be approximated remarkably well by a simple distribution which we shall call the \emph{typical distribution}. The quality of this approximation increases with the working precision and we thus derive both an exact, computable model of rounding errors for low-precisions, and a simple but good approximating model of rounding errors for high-precisions.
@@ -296,12 +299,12 @@ For any univariate random variable $X$ with density $f_X$, we define the \emph{e
 where the explicit computation of the random variables $X_1(1+\Err(X_i))$ can be performed using the densities derived in \cref{sec:rounding} and the operations on densities defined in \cref{subsec:rvarithmetic}.
 
 \subsubsection{Terms} will be modelled as (univariate) random variables using the following inductive definition:
-\begin{align*}
-model(\mathtt{r})&= r\text{, the constant r.v.}\\
-model(\mathtt{x_i})&= X_i\\
+\begin{align}
+model(\mathtt{r})&= r\text{, the constant r.v.} \nonumber\\
+model(\mathtt{x_i})&= X_i \nonumber\\
 model(\mathtt{t_1\mop t_2})&=\left(model(\mathtt{t_1})\iop model(\mathtt{t_2})\right)\cdot \\
-& \hspace{12pt}\left(1+\Err(model(\mathtt{t_1})\iop model(\mathtt{t_2}))\right)
-\end{align*}
+& \hspace{12pt}\left(1+\Err(model(\mathtt{t_1})\iop model(\mathtt{t_2}))\right)\label{eq:termsem}
+\end{align}
 
 Note how we model the arithmetic operations in accordance with the fundamental model of \cref{eq:probabilistic}: we first compute the random variable $model(\mathtt{t_1})\iop model(\mathtt{t_2})$ (typically using the operations on densities defined in \cref{subsec:rvarithmetic}) which corresponds to the infinite-precision operation, and we then add a probabilistic error term whose distribution is computed from the distribution of $model(\mathtt{t_1})\iop model(\mathtt{t_2})$ itself using the densities derived in \cref{sec:rounding}.
 
@@ -369,6 +372,25 @@ Figure \ref{fig:impl:errdist} shows a plot of the half-precision error distribut
 \end{figure}
 
 \subsection{Range analysis}
+With a concrete representation of the error distribution associated with an input distribution we can recursively evaluate the probabilistic interpretation of terms following \eqref{eq:termsem}. This computes the final output distribution (including probabilistic rounding errors) of a term, given input distributions for each of its variable. A simple application of this output distribution is \emph{range analysis}. 
+
+We consider the following  benchmark from xxx
+\[
+\tt{((((((x0 + x1) + x2) + x3) + x4) + x5) + x6) + x7}
+\]
+with each $\tt xi$ assumed to be uniformly distributed on the interval $\left[1,2\right]$. 
+
+\begin{figure}[h!]
+\includegraphics[scale=0.22]{pics/range_dist}
+\caption{T.}
+\label{fig:impl:errdist}
+\end{figure}
+
+\begin{figure}[h!]
+\includegraphics[scale=0.22]{pics/range_dist_div}
+\caption{T.}
+\label{fig:impl:errdist}
+\end{figure}
 
 \bibliographystyle{plain}
 \bibliography{bib/constantinides-dahlqvist}
