@@ -362,11 +362,10 @@ Our implementation focuses on computations performed in low precision, that is t
 
 PaCAL concretely implements random variables as a density function represented by a piecewise Chebyshev interpolation polynomial. We therefore use the same representation and concretely represent the density \cref{eq:errorDensity} as a Chebyshev interpolating polynomial. The polynomial interpolation is performed using the library \texttt{pychebfun}, a Python implementation of the library \texttt{chebfun} \cite{battles2004extension} developed to perform accurate and fast computations on functions represented as Chebyshev polynomial interpolations.
 
-Figure \ref{fig:impl:errdist} shows a plot of the half-precision error distribution for a random variable distributed uniformly on $\left[0,1\right]$. The black line is the density represented as a Chebyshev interpolating polynomial, the blue area is a histogram of the relative rounding error on one million samples.
+Figure \ref{fig:impl:errdist} shows a plot of the half-precision error distribution for a random variable distributed uniformly on $\left[0,1\right]$. The red line is the density represented as a Chebyshev interpolating polynomial, the blue area is a histogram of the relative rounding error on one million samples.
 
 \begin{figure}[h!]
-\hspace{-3em}
-\includegraphics[scale=0.60]{pics/Relative_Error_Distribution}
+\includegraphics[scale=0.22]{pics/Relative_Error_Distribution}
 \caption{Implemented density function vs Monte-Carlo simulation.}
 \label{fig:impl:errdist}
 \end{figure}
@@ -374,23 +373,28 @@ Figure \ref{fig:impl:errdist} shows a plot of the half-precision error distribut
 \subsection{Range analysis}
 With a concrete representation of the error distribution associated with an input distribution we can recursively evaluate the probabilistic interpretation of terms following \eqref{eq:termsem}. This computes the final output distribution (including probabilistic rounding errors) of a term, given input distributions for each of its variable. A simple application of this output distribution is \emph{range analysis}. 
 
-We consider the following  benchmark from xxx
+We first consider a simple application of range analysis, namely the detection of overflows. To illustrate our probabilistic approach consider two variables $\tt x0, x1$ with $\tt x0$ distributed uniformly on $\left[10, 15.5\right]$ and $\tt x1$ distributed uniformly on $\left[0.97,2\right]$. Suppose that the working precision is 3 bits for the exponent and 3 bits for the mantissa and that we are interested in the term $\tt x0/x1$. In infinite precision $15.5/0.97 < 16$, the largest representable number at the given precision level, and there is no overflow. In reduced precision however overflow can occur. In this case, an analyser like FPTaylor will correctly detect the overflow and return an infinite range, but will not be able to quantify the \emph{likelihood of overflow}. Figure \ref{fig:impl:div} shows the output distribution of the term $\tt x0/x1$ (red line), the support of the output distribution (`PM' in the legend), the output range of FPTaylor (`FPT' in the legend), and a histogram of the computation $\tt x0/x1$ performed on one million samples in reduced precision. Analytically, the probability of overflow is xxx\%, and empirically xxx\% of the samples overflow.
+
+\begin{figure}[h!]
+\includegraphics[scale=0.22]{pics/range_dist_div}
+\caption{Add caption here.}
+\label{fig:impl:div}
+\end{figure}
+Next, we consider the following  benchmark from xxx
 \[
 \tt{((((((x0 + x1) + x2) + x3) + x4) + x5) + x6) + x7}
 \]
 with each $\tt xi$ assumed to be uniformly distributed on the interval $\left[1,2\right]$. 
 
-\begin{figure}[h!]
-\includegraphics[scale=0.22]{pics/range_dist}
-\caption{T.}
-\label{fig:impl:errdist}
-\end{figure}
+
+
 
 \begin{figure}[h!]
-\includegraphics[scale=0.22]{pics/range_dist_div}
-\caption{T.}
-\label{fig:impl:errdist}
+\includegraphics[scale=0.22]{pics/range_dist}
+\caption{Add caption here.}
+\label{fig:impl:benchmark}
 \end{figure}
+
 
 \bibliographystyle{plain}
 \bibliography{bib/constantinides-dahlqvist}
