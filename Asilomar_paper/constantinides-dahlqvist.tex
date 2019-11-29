@@ -16,8 +16,8 @@
 \crefname{section}{\S}{\S\S}
 \crefname{subsection}{\S}{\S\S}
 \crefname{subsubsection}{\S}{\S\S}
-\crefname{equation}{eq.}{}
-\Crefname{equation}{Eq.}{}
+\crefname{equation}{Eq.}{}
+\crefname{figure}{Fig.}{}
 
 %% MATHS
 
@@ -82,8 +82,10 @@ x\mop y=(x\iop y)(1+\delta), \qquad\delta\sim dist \label{eq:probabilistic}
 \end{align}
 but now $\delta$ is \emph{sampled} from $dist$, a probability distribution whose support is $\left[-u,u\right]$. In other words we move from a non-deterministic model of rounding errors to a \emph{probabilistic} model of rounding errors. This model will allow us to formalise and answer questions like: \textit{What is the distribution of outputs when rounding errors are taken into account?} \textit{What is the average rounding error?} \textit{What is the worst-case error with $99.9\%$ probability?}
 
-As was mentioned above, model \eqref{eq:traditional} amounts to saying that any numerical program is a non-deterministic program. Completely analogously, in the perspective of \cref{eq:probabilistic} every numerical program is a \emph{probabilistic program}, that is to say a program which admits sampling as a native instruction. The study of probabilistic programs goes back to Kozen \cite{K81c} which modelled simple \texttt{while} programs containing an \emph{explicit} sampling instruction \texttt{random()}. In our setting any numerical program becomes a probabilistic program via an \emph{implicit} sampling operation which takes place whenever an arithmetic operation is performed. This implicit sampling is the only difference with the standard setting of \cite{K81c}, and we will otherwise understand how programs process randomness by following the framework laid out in \cite{K81c}. The study of probabilistic programs has recently witnessed a resurgence of interest driven by new applications in machine learning and statistical analysis of large datasets.\Rocco{Fred, I do not know if we can say this. Actually Dabasmita et al. is the first work doing this. What we can say is that we are the first one describing the floating point error using a pure probabilistic model, and we compare with worst analysis instead of relying on the top of them.} As far as we know this is the first attempt to bring the techniques of probabilistic program analysis to bear on the problem of numerical accuracy.
+As was mentioned above, model \eqref{eq:traditional} amounts to saying that any numerical program is a non-deterministic program. Completely analogously, in the perspective of \cref{eq:probabilistic} every numerical program is a \emph{probabilistic program}, that is to say a program which admits sampling as a native instruction. The study of probabilistic programs goes back to Kozen \cite{K81c} which modelled simple \texttt{while} programs containing an \emph{explicit} sampling instruction \texttt{random()}. In our setting any numerical program becomes a probabilistic program via an \emph{implicit} sampling operation which takes place whenever an arithmetic operation is performed. This implicit sampling is the only difference with the standard setting of \cite{K81c}, and we will otherwise understand how programs process randomness by following the framework laid out in \cite{K81c}. The study of probabilistic programs has recently witnessed a resurgence of interest driven by new applications in machine learning and statistical analysis of large datasets.
 
+%\Rocco{Fred, I do not know if we can say this. Actually Dabasmita et al. is the first work doing this. What we can say is that we are the first one describing the floating point error using a pure probabilistic model, and we compare with worst analysis instead of relying on the top of them.} As far as we know this is the first attempt to bring the techniques of probabilistic program analysis to bear on the problem of numerical accuracy.
+%
 \emph{Related works: }
 The probabilistic model of \cref{eq:probabilistic} is not new, it can be traced back to von Neumann and Goldstine \cite{von1947numerical} and is very similar to the so-called Monte-Carlo arithmetic of \cite{parker1997monte}.
  More recently, the model of \cref{eq:probabilistic} has been investigated by Higham \cite{higham2019new}
@@ -306,7 +308,7 @@ where the explicit computation of the random variables $X_1(1+\Err(X_i))$ can be
 \begin{align}
 model(\mathtt{r})&= r\text{, the constant r.v.} \nonumber\\
 model(\mathtt{x_i})&= X_i \nonumber\\
-model(\mathtt{t_1\mop t_2})&=\left(model(\mathtt{t_1})\iop model(\mathtt{t_2})\right)\cdot \\
+model(\mathtt{t_1\mop t_2})&=\left(model(\mathtt{t_1})\iop model(\mathtt{t_2})\right)\cdot  \nonumber\\
 & \hspace{12pt}\left(1+\Err(model(\mathtt{t_1})\iop model(\mathtt{t_2}))\right)\label{eq:termsem}
 \end{align}
 
@@ -358,7 +360,7 @@ The rules given above allows us (in principle) to compute the output distributio
 
 We have implemented the probabilistic interpretation of the class of terms defined in \cref{subsec:syntax} whose syntax has the structure of a tree, that is to say terms where variables are not repeated (in which case the syntax would be a DAG). We can thus compute the probabilistic interpretation of $\tt (x+y)/(z\ast t)$ but not of $\tt (x+y)/(x\ast y)$. The reason for this current limitation is that two occurrences of the same variable must be interpreted as two perfectly correlated random variables, \ie a probability distribution whose support lies on the diagonal of $\R^2$. Such a distribution cannot have a two-dimensional density function, and this renders their representation highly-non trivial. For the time being we leave this problem to future work.
 
-As shown in \cref{subsec:sem}, the interpretation of terms is computed by performing arithmetic operations on random variables. For random variables whose probability distribution is representable by density functions, \cref{subsec:rvarithmetic} shows how these arithmetic operations can be implemented in practise. A sophisticated version of \cref{eq:pdfplus}-\cref{eq:pdfdiv} is implemented in the Python library PaCAL
+As shown in \cref{subsec:sem}, the interpretation of terms is computed by performing arithmetic operations on random variables. For random variables whose probability distribution is representable by density functions, \cref{subsec:rvarithmetic} shows how these arithmetic operations can be implemented in practice. A sophisticated version of \cref{eq:pdfplus}-\cref{eq:pdfdiv} is implemented in the Python library PaCAL
 \cite{jaroszewicz2012arithmetic}\cite{korzen2014pacal} on which we have based the evaluation of the probabilistic interpretation of terms.
 
 \subsection{Setup}
@@ -369,7 +371,7 @@ Our implementation focuses on computations performed in low precision, that is t
 
 PaCAL concretely implements random variables as a density function represented by a piecewise Chebyshev interpolation polynomial. We therefore use the same representation and concretely represent the density \cref{eq:errorDensity} as a Chebyshev interpolating polynomial. The polynomial interpolation is performed using the library \texttt{pychebfun}, a Python implementation of the library \texttt{chebfun} \cite{battles2004extension} developed to perform accurate and fast computations on functions represented as Chebyshev polynomial interpolations.
 
-Figure \ref{fig:impl:errdist} shows a plot of the half-precision error distribution for a random variable distributed uniformly on $\left[0,1\right]$. The red line is the density represented as a Chebyshev interpolating polynomial, the blue area is a histogram of the relative rounding error on one million samples.
+Figure \ref{fig:impl:errdist} shows a plot of the half-precision error distribution for a random variable distributed uniformly on $\left[0,1\right]$. The red line is the density represented as a Chebyshev interpolating polynomial, the blue area is a histogram of the relative rounding error on one million samples. Note again the similarity with the typical density function represented in \cref{fig:typical}.
 
 \begin{figure}[h!]
 \includegraphics[scale=0.22]{pics/Relative_Error_Distribution}
@@ -380,34 +382,34 @@ Figure \ref{fig:impl:errdist} shows a plot of the half-precision error distribut
 \subsection{Range analysis}
 With a concrete representation of the error distribution associated with an input distribution we can recursively evaluate the probabilistic interpretation of terms following \eqref{eq:termsem}. This computes the final output distribution (including probabilistic rounding errors) of a term, given input distributions for each of its variable. A simple application of this output distribution is \emph{range analysis}. 
 
-We first consider a simple application of range analysis, namely the detection of overflows. To illustrate our probabilistic approach consider two variables $\tt x0, x1$ with $\tt x0$ distributed uniformly on $\left[10, 15.5\right]$ and $\tt x1$ distributed uniformly on $\left[0.97,2\right]$. Suppose that the working precision is 3 bits for the exponent and 3 bits for the mantissa and that we are interested in the term $\tt x0/x1$. In infinite precision $15.5/0.97 < 16$, the largest representable number at the given precision level, and there is no overflow. In reduced precision however overflow can occur. In this case, an analyser like FPTaylor will correctly detect the overflow and return an infinite range, but will not be able to quantify the \emph{likelihood of overflow}. Figure \ref{fig:impl:div} shows the output distribution of the term $\tt x0/x1$ (red line), the support of the output distribution (`PM' in the legend), the output range of FPTaylor (`FPT' in the legend), and a histogram of the computation $\tt x0/x1$ performed on one million samples in reduced precision. Analytically, the probability of overflow is xxx\%, and empirically xxx\% of the samples overflow.
+We first consider a simple application of range analysis, namely the detection of overflows. To illustrate our probabilistic approach consider two variables $\tt x0, x1$ with $\tt x0$ distributed uniformly on $\left[10, 15.5\right]$ and $\tt x1$ distributed uniformly on $\left[0.97,2\right]$. Suppose that the working precision is 3 bits for the exponent and 3 bits for the mantissa and that we are interested in the term $\tt x0/x1$. In infinite precision $15.5/0.97 < 16$, the largest representable number at the given precision level, and there is no overflow. In reduced precision however overflow can occur. In this case, an analyser like FPTaylor will correctly detect the overflow and return an infinite range, but will not be able to quantify the \emph{likelihood of overflow}. \cref{fig:impl:div} shows the output distribution of the term $\tt x0/x1$ (red line), the support of the output distribution (`PM' in the legend), the output range of FPTaylor (`FPT' in the legend), and a histogram of the computation $\tt x0/x1$ performed on one million samples in reduced precision. Analytically, the probability of overflow is xxx\%, and empirically xxx\% of the samples overflow.
 
 \begin{figure}[h!]
 \includegraphics[scale=0.22]{pics/range_dist_div}
-\caption{Add caption here.}
+\caption{Analytical and simulated output distribution for \texttt{x0/x1}.}
 \label{fig:impl:div}
 \end{figure}
 
-Next, we consider two benchmarks from FPBench~\cite{fpbench}. The following is \texttt{test02\_sum8less} and consists in: 
+Next, we consider two benchmarks from FPBench~\cite{fpbench} which our current setup can handle. In both cases we take \emph{half-precision} as the working precision. The first benchmark is \texttt{test02\_sum8less} which is given by the term: 
 \[
 \tt{((((((x0 + x1) + x2) + x3) + x4) + x5) + x6) + x7}
 \]
-with each $\tt xi$ assumed to be uniformly distributed on the interval $\left[1,2\right]$. 
+with each $\tt xi$ assumed to be uniformly distributed on the interval $\left[1,2\right]$. The result of the range analysis are shown in \cref{fig:impl:benchmark}. The support of the output distribution provides marginally worse error bounds than FPTaylor and is in good agreement with one million Monte-Carlo simulations. However, we can probabilistically tighten these bound: at 99.99\% confidence we can say that the output range lies in the interval $\left [xxx,xxx\right]$.
 
 \begin{figure}[h!]
 	\includegraphics[scale=0.22]{pics/range_dist}
-	\caption{Output distribution for the expression in \texttt{test02\_sum8less}.}
+	\caption{Analytical and simulated output distribution for \texttt{test02\_sum8less}.}
 	\label{fig:impl:benchmark}
 \end{figure}
 
-The second benchmark is \texttt{test02\_mul8less}:
+The second benchmark provides an even stronger case for considering probabilistic range analysis. Consider the multiplicative cousin of \texttt{test02\_sum8less} given by the term \texttt{test02\_mul8less}:
 \[
 \tt{((((((x0 * x1) * x2) * x3) * x4) * x5) * x6) * x7}
 \]
-with each $\tt xi$ assumed to be uniformly distributed on the interval $\left[-3,3\right]$. For this last benchmark we report also the interval containing 99.99\% of the distribution.
+with each $\tt xi$ assumed to be uniformly distributed on the interval $\left[-3,3\right]$. The range analysis \texttt{test02\_mul8less} is displayed in \cref{fig:impl:benchmark2}. Again the support of the output distribution is marginally wider that the one provided by FPTaylor, but with 99.99\% confidence we can tighten the output range by about five orders of magnitude in base 2 to $\left[206,206\right]$.
 \begin{figure}[h!]
 	\includegraphics[scale=0.177]{pics/mul}
-	\caption{Add caption here.}
+	\caption{Analytical and simulated output distribution for \texttt{test02\_mul8less}}
 	\label{fig:impl:benchmark2}
 \end{figure}
 
