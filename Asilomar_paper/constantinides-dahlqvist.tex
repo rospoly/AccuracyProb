@@ -174,15 +174,13 @@ where $\one_{A}(x)$ is the usual indicator function which returns 1 if $x\in A$ 
 
 \subsection{The typical rounding error distribution}
 Interestingly, when computing the error density \cref{eq:errorDensity} for a wide variety of well-known input distribution, one very often obtains more or less the same curve. This phenomenon is illustrated in \cref{fig:errdist} where the half-precision error density computed via \cref{eq:errorDensity} is displayed for uniform distributions over $\left[-10,10\right]$ and $\left[0,1\right]$ and for normal distributions with parameters $\mu=0,\sigma=2$ and $\mu=2,\sigma=10$ respectively. The reader will notice immediately that all the curves are nearly identical.
-
 \vspace{-1em}
 \begin{figure}[h!]
 \hspace{-3em}
 \includegraphics[scale=0.65]{pics/several_examples}
 \caption{Half-precision relative error distribution for four typical input distributions}
 \label{fig:errdist}
-\end{figure}
-
+\end{figure}\\\\
 In this section we will sketch how, under some regularity assumptions about the input distribution, the error density of \cref{eq:errorDensity} can be approximated by a simple, piecewise polynomial curve which we shall call the \emph{typical error distribution}. The precise mathematical derivation of this curve being relatively long, we refer the reader to XXX for the full details. Here we will simply specify conditions under which the error distribution given by \cref{eq:errorDensity} is close to the typical distribution. The key observations which we shall make are that (a) the quality of the approximation increases with the working precision (henceforth $p$), and (b) the likelihood of the assumptions being satisfied also increases with $p$.
 
 Let $z(e,s,k)$ denote the floating-point representable real with exponent $e$, sign $(-1)^s$ and mantissa $k$, and let $e_{min}$ and $e_{max}$ denote the smallest and largest exponents respectively. Given a $t\in \left[-1,1\right]$, one can show that the mantissas such that
@@ -363,9 +361,6 @@ We have implemented the probabilistic interpretation of the class of terms defin
 As shown in \cref{subsec:sem}, the interpretation of terms is computed by performing arithmetic operations on random variables. For random variables whose probability distribution is representable by density functions, \cref{subsec:rvarithmetic} shows how these arithmetic operations can be implemented in practice. A sophisticated version of \cref{eq:pdfplus}-\cref{eq:pdfdiv} is implemented in the Python library PaCAL
 \cite{jaroszewicz2012arithmetic}\cite{korzen2014pacal} on which we have based the evaluation of the probabilistic interpretation of terms.
 
-\subsection{Setup}
-We evaluated our methodology on  
-
 \subsection{Rounding error distribution}
 Our implementation focuses on computations performed in low precision, that is to say half-precision or lower. We therefore compute the distribution of relative errors using the exact analytic formula \cref{eq:errorDensity}.
 
@@ -382,7 +377,7 @@ Figure \ref{fig:impl:errdist} shows a plot of the half-precision error distribut
 \subsection{Range analysis}
 With a concrete representation of the error distribution associated with an input distribution we can recursively evaluate the probabilistic interpretation of terms following \eqref{eq:termsem}. This computes the final output distribution (including probabilistic rounding errors) of a term, given input distributions for each of its variable. A simple application of this output distribution is \emph{range analysis}. 
 
-We first consider a simple application of range analysis, namely the detection of overflows. To illustrate our probabilistic approach consider two variables $\tt x0, x1$ with $\tt x0$ distributed uniformly on $\left[10, 15.5\right]$ and $\tt x1$ distributed uniformly on $\left[0.97,2\right]$. Suppose that the working precision is 3 bits for the exponent and 3 bits for the mantissa and that we are interested in the term $\tt x0/x1$. In infinite precision $15.5/0.97 < 16$, the largest representable number at the given precision level, and there is no overflow. In reduced precision however overflow can occur. In this case, an analyser like FPTaylor will correctly detect the overflow and return an infinite range, but will not be able to quantify the \emph{likelihood of overflow}. \cref{fig:impl:div} shows the output distribution of the term $\tt x0/x1$ (red line), the support of the output distribution (`PM' in the legend), the output range of FPTaylor (`FPT' in the legend), and a histogram of the computation $\tt x0/x1$ performed on one million samples in reduced precision. Analytically, the probability of overflow is xxx\%, and empirically xxx\% of the samples overflow.
+We first consider a simple application of range analysis, namely the detection of overflows. To illustrate our probabilistic approach consider two variables $\tt x0, x1$ with $\tt x0$ distributed uniformly on $\left[10, 15.5\right]$ and $\tt x1$ distributed uniformly on $\left[0.97,2\right]$. Suppose that the working precision is 3 bits for the exponent and 3 bits for the mantissa and that we are interested in the term $\tt x0/x1$. In infinite precision $15.5/0.97 < 16$, the largest representable number at the given precision level, and there is no overflow. In reduced precision however overflow can occur. In this case, an analyser like FPTaylor will correctly detect the overflow and return an infinite range, but will not be able to quantify the \emph{likelihood of overflow}. \cref{fig:impl:div} shows the output distribution of the term $\tt x0/x1$ (red line), the support of the output distribution (`PM' in the legend), the output range of FPTaylor (`FPT' in the legend), and a histogram of the computation $\tt x0/x1$ performed on one million samples in reduced precision. Analytically, the probability of overflow is 0.0775\%, and empirically 0.0642\% of the samples overflow.
 
 \begin{figure}[h!]
 \includegraphics[scale=0.22]{pics/range_dist_div}
@@ -394,7 +389,7 @@ Next, we consider two benchmarks from FPBench~\cite{fpbench} which our current s
 \[
 \tt{((((((x0 + x1) + x2) + x3) + x4) + x5) + x6) + x7}
 \]
-with each $\tt xi$ assumed to be uniformly distributed on the interval $\left[1,2\right]$. The result of the range analysis are shown in \cref{fig:impl:benchmark}. The support of the output distribution provides marginally worse error bounds than FPTaylor and is in good agreement with one million Monte-Carlo simulations. However, we can probabilistically tighten these bound: at 99.99\% confidence we can say that the output range lies in the interval $\left [xxx,xxx\right]$.
+with each $\tt xi$ assumed to be uniformly distributed on the interval $\left[1,2\right]$. The result of the range analysis are shown in \cref{fig:impl:benchmark}. The support of the output distribution provides marginally worse error bounds than FPTaylor and is in good agreement with one million Monte-Carlo simulations. However, we can probabilistically tighten these bound: at 99.99\% confidence we can say that the output range lies in the interval $\left [9.0,15.0\right]$.
 
 \begin{figure}[h!]
 	\includegraphics[scale=0.22]{pics/range_dist}
