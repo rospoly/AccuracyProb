@@ -52,14 +52,23 @@
 \usepackage[backgroundcolor=Apricot, textsize=footnotesize]{todonotes}
 \newcommand{\Rocco}{\textcolor{blue}}
 
-\title{A probabilistic approach to floating point arithmetic}
-\author{George Constantinides and Fredrik Dahlqvist \hspace{10em}Rocco Salvia \\ Department of Electrical and Electronic Engineering\hspace{7em}School of Computing \\ \hspace{5em}Imperial College London \hspace{12.5em} University of Utah}
+\title{A Probabilistic Approach to Floating Point Arithmetic}
+
+\author{
+\IEEEauthorblockN{Fredrik Dahlqvist}
+\IEEEauthorblockA{Department of Electrical and\\ Electronic Engineering\\Imperial College London\\ f.dahlqvist09@imperial.ac.uk}\and 
+\IEEEauthorblockN{Rocco Salvia}
+\IEEEauthorblockA{School of Computing\\ University of Utah\\rocco@cs.utah.edu}\and 
+\IEEEauthorblockN{George A. Constantinides}
+\IEEEauthorblockA{Department of Electrical and\\ Electronic Engineering\\Imperial College London\\ g.constantinides@imperial.ac.uk}
+}
+
+%\author{Fredrik Dahlqvist$^{1}$ \hspace{8em}Rocco Salvia$^{2}$ \hspace{8em} George A. Constantinides$^{3}$\footnote{Test}\\ Department of Electrical and Electronic Engineering\hspace{7em}School of Computing \hspace{7em}\\ \hspace{5em}Imperial College London \hspace{12.5em} University of Utah}
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Finite-precision floating point arithmetic unavoidably introduces rounding errors which are traditionally bounded using a worst-case analysis. However, worst-case analysis might be overly conservative because worst-case errors can be extremely rare events in practice. Here we develop a probabilistic model of rounding errors with which it becomes possible to quantify the likelihood that the rounding error of an algorithm lies within a given interval. 
-Given an input distribution, the model requires the distribution of rounding errors. We show how to exactly compute this distribution for low precision arithmetic. For high precision arithmetic we derive a simple approximation. The model is then entirely compositional: given a numerical program written in a simple imperative programing language we can recursively compute the distribution of rounding errors at each step and propagate it through each program instruction. This is done by applying a formalism originaly developed by Kozen to understand the semantics of probabilistic programs, for example how probability distributions gets transformed by assignments or "if then else" statements.
+Finite-precision floating point arithmetic unavoidably introduces rounding errors which are traditionally bounded using a worst-case analysis. However, worst-case analysis might be overly conservative because worst-case errors can be extremely rare events in practice. Here we develop a probabilistic model of rounding errors with which it becomes possible to estimate the likelihood that the rounding error of an algorithm lies within a given interval. Given an input distribution, we show how to compute the distribution of rounding errors. We do this exactly for low precision arithmetic, for high precision arithmetic we derive a simple approximation. The model is then entirely compositional: given a numerical program written in a simple imperative programming language we can recursively compute the distribution of rounding errors at each step of the computation and propagate it through each program instruction. This is done by applying a formalism originally developed by Kozen to formalize the semantics of probabilistic programs. We then discuss an implementation of the model and use it to perform probabilistic range analyses on some benchmarks.
 \end{abstract}
 
 \section{Introduction}
@@ -354,7 +363,7 @@ The rules given above allows us (in principle) to compute the output distributio
 
 \section{Experimental results}\label{sec:exp}
 
-We have implemented the probabilistic interpretation of the class of terms defined in \cref{subsec:syntax} whose syntax has the structure of a tree, that is to say terms where variables are not repeated (in which case the syntax would be a DAG). We can thus compute the probabilistic interpretation of $\tt (x+y)/(z\ast t)$ but not of $\tt (x+y)/(x\ast y)$. The reason for this current limitation is that two occurrences of the same variable must be interpreted as two perfectly correlated random variables, \ie a probability distribution whose support lies on the diagonal of $\R^2$. Such a distribution cannot have a two-dimensional density function, and this renders their representation highly-non trivial. For the time being we leave this problem to future work.
+We have implemented the probabilistic interpretation of the class of terms (defined in \cref{subsec:syntax}) whose syntax has the structure of a \emph{tree}, that is to say terms where variables are not repeated (in which case the syntax would be a DAG). We can thus compute the probabilistic interpretation of $\tt (x+y)/(z\ast t)$ but not of $\tt (x+y)/(x\ast y)$. The reason for this current limitation is that two occurrences of the same variable must be interpreted as two perfectly correlated random variables, \ie a probability distribution whose support lies on the diagonal of $\R^2$. Such a distribution cannot have a two-dimensional density function, and this renders their representation highly-non trivial. For the time being we leave this problem to future work.
 
 As shown in \cref{subsec:sem}, the interpretation of terms is computed by performing arithmetic operations on random variables. For random variables whose probability distribution is representable by density functions, \cref{subsec:rvarithmetic} shows how these arithmetic operations can be implemented in practice. A sophisticated version of \cref{eq:pdfplus}-\cref{eq:pdfdiv} is implemented in the Python library PaCAL
 \cite{jaroszewicz2012arithmetic}\cite{korzen2014pacal} on which we have based the evaluation of the probabilistic interpretation of terms.
@@ -364,7 +373,7 @@ Our implementation focuses on computations performed in low precision, that is t
 
 PaCAL concretely implements random variables as a density function represented by a piecewise Chebyshev interpolation polynomial. We therefore use the same representation and concretely represent the density \cref{eq:errorDensity} as a Chebyshev interpolating polynomial. The polynomial interpolation is performed using the library \texttt{pychebfun}, a Python implementation of the library \texttt{chebfun} \cite{battles2004extension} developed to perform accurate and fast computations on functions represented as Chebyshev polynomial interpolations.
 
-Figure \ref{fig:impl:errdist} shows a plot of the half-precision error distribution for a random variable distributed uniformly on $\left[0,1\right]$. The red line is the density represented as a Chebyshev interpolating polynomial, the blue area is a histogram of the relative rounding error on one million samples. Note again the similarity with the typical density function represented in \cref{fig:typical}.
+\cref{fig:impl:errdist} shows a plot of the half-precision error distribution for a random variable distributed uniformly on $\left[0,1\right]$. The red line is the density represented as a Chebyshev interpolating polynomial, the blue area is a histogram of the relative rounding error on one million samples. Note again the similarity with the typical density function represented in \cref{fig:typical}.
 
 \begin{figure}[h!]
 \includegraphics[scale=0.22]{pics/Relative_Error_Distribution}
@@ -387,7 +396,7 @@ Next, we consider two benchmarks from FPBench~\cite{fpbench} which our current s
 \[
 \tt{((((((x0 + x1) + x2) + x3) + x4) + x5) + x6) + x7}
 \]
-with each $\tt xi$ assumed to be uniformly distributed on the interval $\left[1,2\right]$. The result of the range analysis are shown in \cref{fig:impl:benchmark}. The support of the output distribution provides marginally worse error bounds than FPTaylor and is in good agreement with one million Monte-Carlo simulations. However, we can probabilistically tighten these bound: at 99.99\% confidence we can say that the output range lies in the interval $\left [9.0,15.0\right]$.
+with each $\tt xi$ assumed to be uniformly distributed on the interval $\left[1,2\right]$. The result of the range analysis are shown in \cref{fig:impl:benchmark}. The support of the output distribution provides marginally worse error bounds than FPTaylor and is in good agreement with one million Monte-Carlo simulations, that is to say one million evaluations of the term \texttt{test02\_sum8less} in reduced precision where is input value is sampled uniformly from $\left[1,2\right]$. Crucially, we can probabilistically tighten these bound: at 99.99\% confidence we can say that the output range lies in the interval $\left [9.0,15.0\right]$.
 
 \begin{figure}[h!]
 	\includegraphics[scale=0.22]{pics/range_dist}
@@ -399,7 +408,7 @@ The second benchmark provides an even stronger case for considering probabilisti
 \[
 \tt{((((((x0 * x1) * x2) * x3) * x4) * x5) * x6) * x7}
 \]
-with each $\tt xi$ assumed to be uniformly distributed on the interval $\left[-3,3\right]$. The range analysis \texttt{test02\_mul8less} is displayed in \cref{fig:impl:benchmark2}. Again the support of the output distribution is marginally wider that the one provided by FPTaylor, but with 99.99\% confidence we can tighten the output range by about five orders of magnitude in base 2 to $\left[206,206\right]$.
+with each $\tt xi$ assumed to be uniformly distributed on the interval $\left[-3,3\right]$. The range analysis \texttt{test02\_mul8less} is displayed in \cref{fig:impl:benchmark2}. Again the support of the output distribution is marginally wider that the one provided by FPTaylor, but with 99.99\% confidence we can tighten the output range by about five orders of magnitude in base 2 to $\left[-206,206\right]$.
 \begin{figure}[h!]
 	\includegraphics[scale=0.177]{pics/mul}
 	\caption{Analytical and simulated output distribution for \texttt{test02\_mul8less}}
