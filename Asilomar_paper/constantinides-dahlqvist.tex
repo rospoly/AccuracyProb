@@ -87,16 +87,16 @@ As was mentioned above, model \eqref{eq:traditional} amounts to saying that any 
 %\Rocco{Fred, I do not know if we can say this. Actually Dabasmita et al. is the first work doing this. What we can say is that we are the first one describing the floating point error using a pure probabilistic model, and we compare with worst analysis instead of relying on the top of them.} As far as we know this is the first attempt to bring the techniques of probabilistic program analysis to bear on the problem of numerical accuracy.
 %
 \emph{Related works: }
-The probabilistic model of \cref{eq:probabilistic} is not new, it can be traced back to von Neumann and Goldstine \cite{von1947numerical} and is very similar to the so-called Monte-Carlo arithmetic of \cite{parker1997monte}.
+The probabilistic model of \cref{eq:probabilistic} is not new, it can be traced back to von Neumann and Goldstine \cite{von1947numerical} and is very similar to the so-called Monte-Carlo arithmetic of \cite{parker1997monte}. Within the signal processing 
+community, simple probabilistic models of roundoff error are commonplace. Constantinides {\em et al.}~\cite{constantinides2004synthesis} study the propagation of fixed-point roundoff error through linear time-invariant computation, resulting in propagation of the
+first and second statistical moments of the distributions.
  More recently, the model of \cref{eq:probabilistic} has been investigated by Higham \cite{higham2019new}
 and Ipsen \cite{ipsen2019probabilistic}. Interestingly, because \cite{higham2019new} and \cite{ipsen2019probabilistic} are interested in large-dimensional problems, neither work needs to explicitly specify the distribution $dist$ in \cref{eq:probabilistic}. Instead, \cite{higham2019new} requires that each sample from $dist$ be independent and that $\Exp{\delta}=0$, whilst \cite{ipsen2019probabilistic} just requires that $\Exp{\delta}=0$. By using concentration of measure inequalities the authors then obtain probabilistic bounds which are independent of any particular choice of distribution. 
 These bounds however are only applicable to a small class of problem (inner product, matrix multiplication and matrix factorisation algorithms) with very large inputs. Here we will derive a principled distribution $dist$ for the relative error $\delta$ and build a tool implementing the probabilistic model \cref{eq:probabilistic} to any small to medium-sized programs in a systematic way.
 
-In \cite{probdaisy} the authors propose an hybrid approach: first, they
+In \cite{probdaisy} the authors propose a hybrid approach: first, they
 discretize input distributions and represent them as a dictionary which map each sub-interval to the corresponding probability (focal elements). On each sub-interval they combine probabilistic affine arithmetic, to propagate the error terms through the AST of the program, together with worst-case static analysis to bound the imprecision error term separately for each focal element. Their methodology results in a sound probabilistic error analysis, since the (unknown) error distribution is always bounded between proper upper and lower bounds by the analysis, but they inherit limitations of worst-case analysis in case of overflow and division by zero.\\
 Our approach does not rely on worst-case error estimation, so it is a pure probabilistic model for the floating-point error of an expression.
-
-GEORGE TO INSERT A SENTENCE ON \cite{constantinides2007synthesis}.
 
 \section{Two probabilistic models of rounding errors}\label{sec:rounding}
 
